@@ -99,9 +99,7 @@ export default class Game {
 
 	setupGame() {
 		// -------- 1) ФОН --------
-		// Создаём спрайт из background-day.png
 		this.bgSprite = new PIXI.Sprite(PIXI.Texture.from(bgDay));
-		// Чтобы заполнить весь экран 480x640
 		this.bgSprite.width = 480;
 		this.bgSprite.height = 640;
 		this.bgSprite.x = 0;
@@ -109,7 +107,6 @@ export default class Game {
 		this.gameContainer.addChild(this.bgSprite);
 
 		// -------- 2) ПТИЦА --------
-		// (См. Bird.js, там есть анимированный спрайт или что-то подобное)
 		this.bird = new Bird(this.width / 4, this.height / 2);
 		this.gameContainer.addChild(this.bird.sprite);
 
@@ -118,16 +115,12 @@ export default class Game {
 		this.gameContainer.addChild(this.pipesManager.container);
 
 		// -------- 4) ЗЕМЛЯ --------
-		// Вместо коричневого прямоугольника используем base.png
 		this.groundSprite = new PIXI.Sprite(PIXI.Texture.from(base));
 		this.groundSprite.width = 480;
-		this.groundSprite.height = 112; // если ваша земля 112 пикселей
+		this.groundSprite.height = 112;
 		this.groundSprite.x = 0;
-		this.groundSprite.y = 640 - 112; // =528
+		this.groundSprite.y = 640 - 112; // 528
 		this.gameContainer.addChild(this.groundSprite);
-
-		// Если хотите "прокрутку" земли, нужно будет анимировать .x этого спрайта,
-		// чтобы он уезжал влево и зацикливался. Но сейчас оставим статично.
 
 		// -------- 5) ТЕКСТ СЧЁТА --------
 		this.scoreText = new PIXI.Text('0', {
@@ -143,7 +136,7 @@ export default class Game {
 		this.gameContainer.addChild(this.scoreText);
 
 		// -------- 6) Маска (опционально) --------
-		// Если хотите, чтобы трубы/птица не вылезали за пределы, можно делать:
+		// Если хотите, чтобы трубы/птица не вылезали за пределы, можно делать маску:
 		// const maskRect = new PIXI.Graphics();
 		// maskRect.beginFill(0xffffff);
 		// maskRect.drawRect(0, 0, this.width, this.height);
@@ -233,9 +226,6 @@ export default class Game {
 		this.pipesManager.reset();
 		this.timeSinceLastPipe = 0;
 
-		// Если хотим сразу трубу
-		// this.pipesManager.spawnPipe();
-
 		// Запускаем цикл
 		this.app.ticker.add(this.gameLoop, this);
 	}
@@ -256,6 +246,9 @@ export default class Game {
 		this.checkScore();
 	}
 
+	// ------------------------------
+	// Проверка коллизий
+	// ------------------------------
 	checkCollisions() {
 		// Проверка земли
 		if (this.bird.sprite.y + this.bird.sprite.height / 2 > this.height - this.groundSprite.height) {
@@ -269,11 +262,13 @@ export default class Game {
 			return;
 		}
 
-		// Трубы
-		const birdBounds = this.bird.sprite.getBounds();
+		// Трубы: получаем "сжатый" прямоугольник птицы
+		const birdBounds = this.getShrinkedBounds(this.bird.sprite, 5);
+
 		for (let pipe of this.pipesManager.pipes) {
-			const topBounds = pipe.topPipe.getBounds();
-			const bottomBounds = pipe.bottomPipe.getBounds();
+			// Можно тоже чуть "сжать" рамку трубы (например, margin=2)
+			const topBounds = this.getShrinkedBounds(pipe.topPipe, 2);
+			const bottomBounds = this.getShrinkedBounds(pipe.bottomPipe, 2);
 
 			if (this.isColliding(birdBounds, topBounds) || this.isColliding(birdBounds, bottomBounds)) {
 				this.gameOver();
@@ -285,6 +280,17 @@ export default class Game {
 	// Простой AABB
 	isColliding(a, b) {
 		return !(a.x + a.width < b.x || a.x > b.x + b.width || a.y + a.height < b.y || a.y > b.y + b.height);
+	}
+
+	// "Сжимаем" прямоугольник спрайта, чтобы коллизия была точнее
+	getShrinkedBounds(sprite, margin = 5) {
+		const bounds = sprite.getBounds();
+		return new PIXI.Rectangle(
+			bounds.x + margin,
+			bounds.y + margin,
+			bounds.width - margin * 2,
+			bounds.height - margin * 2,
+		);
 	}
 
 	checkScore() {
