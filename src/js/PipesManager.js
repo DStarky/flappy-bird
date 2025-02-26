@@ -1,5 +1,4 @@
 import * as PIXI from 'pixi.js';
-// Подключаем спрайты труб
 import pipeUp from '../assets/pipe-green-up.png'; // верхняя труба (носик внизу)
 import pipeDown from '../assets/pipe-green-down.png'; // нижняя труба (носик вверху)
 
@@ -9,84 +8,69 @@ export default class PipesManager {
 		this.screenHeight = screenHeight;
 		this.speed = speed;
 
-		// Контейнер, где лежат все трубы
+		// Контейнер для всех труб
 		this.container = new PIXI.Container();
 		this.pipes = [];
 
-		// Размеры спрайтов труб (по умолчанию)
+		// Размер спрайтов труб
 		this.pipeWidth = 52;
 		this.pipeHeight = 320;
 
-		// Высота зазора между трубами
+		// Зазор между трубами
 		this.gapHeight = 150;
 
-		// -------------------------------
-		// 1) Расчитываем диапазон для центра зазора (gapY),
-		//    чтобы верхняя труба гарантированно «уходила» за верх экрана,
-		//    а нижняя – за нижний.
-		// -------------------------------
+		// -------------------------------------------------------
+		// Логика, чтобы верхняя труба не заходила «внутрь» экрана верхним краем.
+		// При этом трубы могут «уходить» за границу сверху/снизу.
 		//
-		// Верхняя труба (anchor.y = 1) ставится так, что её "нижняя кромка" = (gapY - gapHeight/2).
-		// Значит "верх" трубы будет (topPipe.y - pipeHeight).
-		// Чтобы труба выходила за верх экрана, нужно:
-		//   (gapY - gapHeight/2) - pipeHeight < 0
-		//   => gapY < pipeHeight + gapHeight/2
+		// topPipe.anchor = (0.5, 1), значит:
+		//   topPipe.y = (центр зазора) - (gapHeight/2) — это нижняя кромка верхней трубы.
+		// Чтобы её верхняя кромка была за пределами экрана (или ровно по границе),
+		//   topPipe.y - pipeHeight <= 0  =>  (gapY - gapHeight/2) - pipeHeight <= 0
+		//   => gapY <= pipeHeight + (gapHeight/2).
 		//
-		// Аналогично для нижней:
-		// нижняя труба (anchor.y = 0) ставится так, что её "верхняя кромка" = (gapY + gapHeight/2).
-		// "низ" трубы = (bottomPipe.y + pipeHeight).
-		// Чтобы труба выходила за нижний край (screenHeight), нужно:
-		//   (gapY + gapHeight/2) + pipeHeight > screenHeight
-		//   => gapY > screenHeight - (pipeHeight + gapHeight/2)
-
-		// Итого получаем, что допустимый центр зазора должен лежать в диапазоне:
-		//   pipeHeight + gapHeight/2 > gapY > screenHeight - (pipeHeight + gapHeight/2)
+		// Для нижней трубы (anchor.y = 0):
+		//   bottomPipe.y = gapY + gapHeight/2 — верхняя кромка.
+		// Чтобы нижняя труба могла "уйти" за нижний край, требуется
+		//   (bottomPipe.y + pipeHeight) >= screenHeight  =>  gapY + gapHeight/2 + pipeHeight >= screenHeight
+		//   => gapY >= screenHeight - (pipeHeight + gapHeight/2).
 		//
-		// Условимся:
-		this.topLimit = this.pipeHeight + this.gapHeight / 2; // верхняя граница gapY
-		this.bottomLimit = this.screenHeight - (this.pipeHeight + this.gapHeight / 2); // нижняя граница gapY
+		// Значит, случайный "центр зазора" (gapY) берём из диапазона:
+		//   [ minGapY, maxGapY ] = [ screenHeight - (pipeHeight + gapHeight/2),  pipeHeight + gapHeight/2 ]
+		// -------------------------------------------------------
 
-		// Если экран слишком маленький и диапазон получается "перевернутым",
-		// придётся либо уменьшать gapHeight, либо pipeHeight.
-		if (this.topLimit > this.bottomLimit) {
-			console.warn(
-				'Параметры pipeHeight и gapHeight слишком велики для данного экрана.\n' +
-					'Диапазон зазора получается некорректным. Попробуйте уменьшить gapHeight.',
-			);
-			// На крайний случай "зажмём" gapY в середину экрана:
-			this.topLimit = this.screenHeight / 2;
-			this.bottomLimit = this.screenHeight / 2;
-		}
-
-		// minGapY и maxGapY — реальные границы случайного центра зазора
-		this.minGapY = this.topLimit;
-		this.maxGapY = this.bottomLimit;
+		this.minGapY = this.screenHeight - (this.pipeHeight + this.gapHeight / 2);
+		this.maxGapY = this.pipeHeight + this.gapHeight / 2;
+		// При экране 640, трубе 320 и зазоре 150:
+		//   minGapY = 640 - (320 + 75) = 245
+		//   maxGapY = 320 + 75 = 395
+		// Диапазон [245..395] даёт 150px «разброса» для центра зазора.
 	}
 
 	// -------------------------------
-	// Создание новой пары труб
+	// Создаём пару труб (верхняя + нижняя)
 	// -------------------------------
 	spawnPipe() {
 		// Случайный центр зазора
 		const gapY = Math.random() * (this.maxGapY - this.minGapY) + this.minGapY;
 
-		// X-координата (справа за экраном)
+		// Точка появления труб (по оси X — справа за экраном)
 		const pipeX = this.screenWidth;
 
 		// ===== ВЕРХНЯЯ ТРУБА =====
-		// Спрайт с «носиком» внизу, anchor = (0.5, 1),
-		// значит координата (x, y) - это нижняя кромка трубы.
+		// anchor.set(0.5, 1): (x, y) — это нижняя кромка трубы.
+		// Нижняя кромка верхней трубы ставится на (gapY - gapHeight/2).
 		const topPipe = new PIXI.Sprite(PIXI.Texture.from(pipeUp));
 		topPipe.anchor.set(0.5, 1);
 		topPipe.x = pipeX;
 		topPipe.y = gapY - this.gapHeight / 2;
-		// Размер трубы не меняем (не масштабируем):
-		// topPipe.width = this.pipeWidth;  // Можно явно, если нужно
+		// Можно явно задать размер, если нужно:
+		// topPipe.width = this.pipeWidth;
 		// topPipe.height = this.pipeHeight;
 
 		// ===== НИЖНЯЯ ТРУБА =====
-		// Спрайт с «носиком» вверху, anchor = (0.5, 0),
-		// значит координата (x, y) - это верхняя кромка трубы.
+		// anchor.set(0.5, 0): (x, y) — верхняя кромка трубы.
+		// Верхняя кромка нижней трубы ставится на (gapY + gapHeight/2).
 		const bottomPipe = new PIXI.Sprite(PIXI.Texture.from(pipeDown));
 		bottomPipe.anchor.set(0.5, 0);
 		bottomPipe.x = pipeX;
@@ -94,27 +78,28 @@ export default class PipesManager {
 		// bottomPipe.width = this.pipeWidth;
 		// bottomPipe.height = this.pipeHeight;
 
-		// Добавляем в контейнер
+		// Добавляем обе трубы в контейнер
 		this.container.addChild(topPipe, bottomPipe);
 
-		// Запоминаем в массив
+		// Запоминаем в массив (нужно для удаления и подсчёта очков)
 		this.pipes.push({
 			topPipe,
 			bottomPipe,
-			passed: false, // понадобится для логики счёта
+			passed: false, // для логики счёта
 		});
 	}
 
 	// -------------------------------
-	// Движение труб (вызывается в gameLoop)
+	// Анимация труб (движение влево)
 	// -------------------------------
 	update(delta) {
 		for (let i = 0; i < this.pipes.length; i++) {
 			const pipe = this.pipes[i];
+			// Двигаем трубы влево
 			pipe.topPipe.x -= this.speed * delta;
 			pipe.bottomPipe.x -= this.speed * delta;
 
-			// Если труба ушла за левый край, удаляем
+			// Если труба ушла за левый край экрана, удаляем её
 			if (pipe.topPipe.x + this.pipeWidth < 0) {
 				this.container.removeChild(pipe.topPipe);
 				this.container.removeChild(pipe.bottomPipe);
@@ -125,7 +110,7 @@ export default class PipesManager {
 	}
 
 	// -------------------------------
-	// Сброс (удалить все трубы)
+	// Сброс (удаляем все трубы)
 	// -------------------------------
 	reset() {
 		for (const pipe of this.pipes) {

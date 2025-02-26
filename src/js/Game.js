@@ -18,8 +18,12 @@ export default class Game {
 
 		this.gravity = 0.5;
 		this.jumpPower = -8;
+
+		// Скорость труб та же (3), но делаем трубы чаще:
 		this.pipeSpeed = 3;
-		this.pipeSpawnInterval = 150;
+		// Было 150, уменьшим, например, до 100 (или ещё меньше, если хотите)
+		this.pipeSpawnInterval = 100;
+
 		this.timeSinceLastPipe = 0;
 
 		this.app = new PIXI.Application({
@@ -226,6 +230,9 @@ export default class Game {
 		this.pipesManager.reset();
 		this.timeSinceLastPipe = 0;
 
+		// Сразу создаём первую трубу, чтобы не ждать
+		this.pipesManager.spawnPipe();
+
 		// Запускаем цикл
 		this.app.ticker.add(this.gameLoop, this);
 	}
@@ -237,6 +244,7 @@ export default class Game {
 		this.pipesManager.update(delta);
 
 		this.timeSinceLastPipe += delta;
+		// Как только превысили интервал — спавним трубу
 		if (this.timeSinceLastPipe > this.pipeSpawnInterval) {
 			this.pipesManager.spawnPipe();
 			this.timeSinceLastPipe = 0;
@@ -262,11 +270,10 @@ export default class Game {
 			return;
 		}
 
-		// Трубы: получаем "сжатый" прямоугольник птицы
+		// Трубы: получаем "сжатый" прямоугольник птицы (если уже добавляли точную коллизию)
 		const birdBounds = this.getShrinkedBounds(this.bird.sprite, 5);
 
 		for (let pipe of this.pipesManager.pipes) {
-			// Можно тоже чуть "сжать" рамку трубы (например, margin=2)
 			const topBounds = this.getShrinkedBounds(pipe.topPipe, 2);
 			const bottomBounds = this.getShrinkedBounds(pipe.bottomPipe, 2);
 
@@ -282,7 +289,7 @@ export default class Game {
 		return !(a.x + a.width < b.x || a.x > b.x + b.width || a.y + a.height < b.y || a.y > b.y + b.height);
 	}
 
-	// "Сжимаем" прямоугольник спрайта, чтобы коллизия была точнее
+	// "Сжимаем" прямоугольник спрайта (если вы уже добавили точную коллизию)
 	getShrinkedBounds(sprite, margin = 5) {
 		const bounds = sprite.getBounds();
 		return new PIXI.Rectangle(
