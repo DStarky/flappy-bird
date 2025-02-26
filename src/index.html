@@ -26,11 +26,24 @@
       touch-action: none;
       user-select: none;
     }
+
+    /* Подключаем шрифт */
+    @font-face {
+      font-family: 'HarreeghPoppedCyrillic';
+      src: url('./assets/font/HarreeghPoppedCyrillic.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      /* По желанию:
+         font-display: swap; 
+         (или auto/block/fallback) 
+      */
+    }
   </style>
 </head>
 
 <body>
   <!-- Canvas будет добавлен динамически с помощью PixiJS -->
+  <script type="module" src="./main.js"></script>
 </body>
 
 </html>

@@ -1,6 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-// const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
 	mode: 'development',
@@ -31,6 +31,10 @@ module.exports = {
 				test: /\.(png|svg|jpg|jpeg|gif)$/i,
 				type: 'asset/resource',
 			},
+			{
+				test: /\.(ttf|woff|woff2|eot)$/,
+				type: 'asset/resource',
+			},
 		],
 	},
 	plugins: [
@@ -38,11 +42,10 @@ module.exports = {
 			title: 'Flappy Bird',
 			template: './src/index.html',
 		}),
-		/*
-    // Если хотите копировать папку src/assets -> dist/assets, раскомментируйте:
-    new CopyWebpackPlugin({
-      patterns: [{ from: 'src/assets', to: 'assets' }],
-    }),
-    */
+		new CopyWebpackPlugin({
+			patterns: [
+				{ from: 'src/assets', to: 'assets' },
+			],
+		}),
 	],
 };
