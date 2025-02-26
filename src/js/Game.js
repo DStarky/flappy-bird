@@ -1,3 +1,4 @@
+// File: Game.js
 import * as PIXI from 'pixi.js';
 import Bird from './Bird';
 import PipesManager from './PipesManager';
@@ -72,18 +73,18 @@ export default class Game {
 		menuBackground.height = this.height;
 		this.menuContainer.addChild(menuBackground);
 
-		// Заголовок (проверяем, есть ли нужные глифы в шрифте)
-		const title = new PIXI.Text('FLAPPY BIRD', {
+		// Заголовок (сразу создаём)
+		this.title = new PIXI.Text('FLAPPY BIRD', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 40,
 			fill: 0xffffff,
 			stroke: 0x000000,
 			strokeThickness: 4,
 		});
-		title.anchor.set(0.5);
-		title.x = this.width / 2;
-		title.y = this.height / 3;
-		this.menuContainer.addChild(title);
+		this.title.anchor.set(0.5);
+		this.title.x = this.width / 2;
+		this.title.y = this.height / 3;
+		this.menuContainer.addChild(this.title);
 
 		// Кнопка "ИГРАТЬ"
 		const startButton = new PIXI.Graphics();
@@ -106,13 +107,27 @@ export default class Game {
 		startText.x = 100;
 		startText.y = 30;
 		startButton.addChild(startText);
+
+		setTimeout(() => {
+			this.title.style = new PIXI.TextStyle({
+				fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+				fontSize: 48,
+				fill: 0xffffff,
+			});
+
+			// Обновляем стиль у кнопки
+			startText.style = new PIXI.TextStyle({
+				fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+				fontSize: 30,
+				fill: 0xffffff,
+			});
+		}, 100);
 	}
 
 	// -------------------------
 	// GAME
 	// -------------------------
 	setupGame() {
-		// Фон
 		this.bgSprite = new PIXI.Sprite(PIXI.Texture.from(bgDay));
 		this.bgSprite.width = this.width;
 		this.bgSprite.height = this.height;
@@ -135,7 +150,7 @@ export default class Game {
 		this.groundSprite.y = this.height - 112;
 		this.gameContainer.addChild(this.groundSprite);
 
-		// Текст для счёта во время игры
+		// Текст для счёта
 		this.scoreText = new PIXI.Text('0', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 40,
@@ -153,14 +168,12 @@ export default class Game {
 	// PAUSE
 	// -------------------------
 	setupPause() {
-		// Тёмный оверлей
 		const overlay = new PIXI.Graphics();
 		overlay.beginFill(0x000000, 0.5);
 		overlay.drawRect(0, 0, this.width, this.height);
 		overlay.endFill();
 		this.pauseContainer.addChild(overlay);
 
-		// Надпись "ПАУЗА"
 		const pauseText = new PIXI.Text('ПАУЗА', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 50,
@@ -180,14 +193,12 @@ export default class Game {
 	setupGameOver() {
 		this.gameOverContainer.removeChildren();
 
-		// Картинка "Game Over"
 		const gameOverSprite = new PIXI.Sprite(PIXI.Texture.from(gameOverImage));
 		gameOverSprite.anchor.set(0.5);
 		gameOverSprite.x = this.width / 2;
 		gameOverSprite.y = this.height / 2 - 100;
 		this.gameOverContainer.addChild(gameOverSprite);
 
-		// Текст, где покажем счёт
 		this.finalScoreText = new PIXI.Text('', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 28,
@@ -196,10 +207,9 @@ export default class Game {
 		});
 		this.finalScoreText.anchor.set(0.5);
 		this.finalScoreText.x = this.width / 2;
-		this.finalScoreText.y = this.height / 2 + 0;
+		this.finalScoreText.y = this.height / 2;
 		this.gameOverContainer.addChild(this.finalScoreText);
 
-		// Кнопка "Заново"
 		const restartButton = new PIXI.Graphics();
 		restartButton.beginFill(0x4caf50);
 		restartButton.drawRoundedRect(0, 0, 200, 60, 10);
@@ -223,17 +233,15 @@ export default class Game {
 	}
 
 	// -------------------------
-	// События (pointer, keyboard)
+	// События
 	// -------------------------
 	setupEventListeners() {
-		// Клик / тап
 		this.app.view.addEventListener('pointerdown', () => {
 			if (this.state === 'PLAY') {
 				this.bird.flap(this.jumpPower);
 			}
 		});
 
-		// Пробел / P
 		window.addEventListener('keydown', e => {
 			if (e.code === 'Space' && this.state === 'PLAY') {
 				this.bird.flap(this.jumpPower);
@@ -247,7 +255,6 @@ export default class Game {
 			}
 		});
 
-		// resize
 		window.addEventListener('resize', () => this.handleResize());
 	}
 
@@ -255,7 +262,6 @@ export default class Game {
 	// START
 	// -------------------------
 	startGame() {
-		// ВАЖНО: удаляем старый колбэк, чтобы не удваивать скорость
 		this.app.ticker.remove(this.gameLoop, this);
 
 		this.menuContainer.visible = false;
@@ -271,7 +277,6 @@ export default class Game {
 		this.pipesManager.reset();
 		this.timeSinceLastPipe = 0;
 
-		// Добавляем в ticker
 		this.app.ticker.add(this.gameLoop, this);
 	}
 
@@ -308,7 +313,6 @@ export default class Game {
 	}
 
 	checkCollisions() {
-		// Земля / потолок
 		if (
 			this.bird.sprite.y + this.bird.sprite.height / 2 > this.height - this.groundSprite.height ||
 			this.bird.sprite.y - this.bird.sprite.height / 2 < 0
@@ -357,7 +361,6 @@ export default class Game {
 	// -------------------------
 	gameOver() {
 		this.state = 'GAMEOVER';
-		// Удаляем из тикера
 		this.app.ticker.remove(this.gameLoop, this);
 
 		if (this.score > this.bestScore) {
