@@ -316,6 +316,20 @@ export default class Game {
 	}
 
 	handleResize() {
+		// Получаем размеры окна
+		const windowWidth = window.innerWidth;
+		const windowHeight = window.innerHeight;
 
+		// Вычисляем коэффициент масштабирования для сохранения пропорций
+		const scale = Math.min(windowWidth / this.width, windowHeight / this.height);
+
+		// Обновляем CSS-стили для canvas
+		this.app.view.style.width = `${this.width * scale}px`;
+		this.app.view.style.height = `${this.height * scale}px`;
+
+		// Центрируем canvas в окне
+		this.app.view.style.position = 'absolute';
+		this.app.view.style.left = `${(windowWidth - this.width * scale) / 2}px`;
+		this.app.view.style.top = `${(windowHeight - this.height * scale) / 2}px`;
 	}
 }
