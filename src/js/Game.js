@@ -19,12 +19,14 @@ export default class Game {
 		this.gravity = 0.5;
 		this.jumpPower = -8;
 
-		// Скорость труб та же (3), но делаем трубы чаще:
+		// Скорость труб
 		this.pipeSpeed = 3;
-		// Было 150, уменьшим, например, до 100 (или ещё меньше, если хотите)
+		// Интервал (в кадрах) между появлением труб
 		this.pipeSpawnInterval = 100;
-
 		this.timeSinceLastPipe = 0;
+
+		// Скорость прокрутки земли (можно сделать равной pipeSpeed, если хотите)
+		this.groundSpeed = 2;
 
 		this.app = new PIXI.Application({
 			width: 480,
@@ -118,10 +120,10 @@ export default class Game {
 		this.pipesManager = new PipesManager(this.width, this.height, this.pipeSpeed);
 		this.gameContainer.addChild(this.pipesManager.container);
 
-		// -------- 4) ЗЕМЛЯ --------
-		this.groundSprite = new PIXI.Sprite(PIXI.Texture.from(base));
-		this.groundSprite.width = 480;
-		this.groundSprite.height = 112;
+		// -------- 4) ЗЕМЛЯ (движущаяся) --------
+		// Вместо обычного Sprite используем TilingSprite
+		const groundTexture = PIXI.Texture.from(base);
+		this.groundSprite = new PIXI.TilingSprite(groundTexture, this.width, 112);
 		this.groundSprite.x = 0;
 		this.groundSprite.y = 640 - 112; // 528
 		this.gameContainer.addChild(this.groundSprite);
@@ -238,13 +240,19 @@ export default class Game {
 	}
 
 	gameLoop(delta) {
+		// Если игра не идёт или уже конец, выходим
 		if (!this.isGameActive || this.isGameOver) return;
 
+		// Обновляем птичку и трубы
 		this.bird.update(delta, this.gravity);
 		this.pipesManager.update(delta);
 
+		// Прокрутка земли
+		// Меняем tilePosition.x, чтобы земля "уезжала" влево
+		this.groundSprite.tilePosition.x -= this.groundSpeed * delta;
+
+		// Спавн труб по таймеру
 		this.timeSinceLastPipe += delta;
-		// Как только превысили интервал — спавним трубу
 		if (this.timeSinceLastPipe > this.pipeSpawnInterval) {
 			this.pipesManager.spawnPipe();
 			this.timeSinceLastPipe = 0;
@@ -270,7 +278,7 @@ export default class Game {
 			return;
 		}
 
-		// Трубы: получаем "сжатый" прямоугольник птицы (если уже добавляли точную коллизию)
+		// "Сжатый" прямоугольник птицы
 		const birdBounds = this.getShrinkedBounds(this.bird.sprite, 5);
 
 		for (let pipe of this.pipesManager.pipes) {
@@ -289,7 +297,7 @@ export default class Game {
 		return !(a.x + a.width < b.x || a.x > b.x + b.width || a.y + a.height < b.y || a.y > b.y + b.height);
 	}
 
-	// "Сжимаем" прямоугольник спрайта (если вы уже добавили точную коллизию)
+	// "Сжимаем" прямоугольник спрайта (для более точной коллизии)
 	getShrinkedBounds(sprite, margin = 5) {
 		const bounds = sprite.getBounds();
 		return new PIXI.Rectangle(
@@ -333,14 +341,14 @@ export default class Game {
 		const windowWidth = window.innerWidth;
 		const windowHeight = window.innerHeight;
 
-		// Вычисляем коэффициент масштабирования для сохранения пропорций
+		// Коэффициент масштабирования
 		const scale = Math.min(windowWidth / this.width, windowHeight / this.height);
 
-		// Обновляем CSS-стили для canvas
+		// Обновляем стили canvas
 		this.app.view.style.width = `${this.width * scale}px`;
 		this.app.view.style.height = `${this.height * scale}px`;
 
-		// Центрируем canvas в окне
+		// Центрируем canvas
 		this.app.view.style.position = 'absolute';
 		this.app.view.style.left = `${(windowWidth - this.width * scale) / 2}px`;
 		this.app.view.style.top = `${(windowHeight - this.height * scale) / 2}px`;
