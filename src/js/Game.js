@@ -2,17 +2,32 @@ import * as PIXI from 'pixi.js';
 import Bird from './Bird';
 import PipesManager from './PipesManager';
 
-// Импортируем спрайты
+// Импорт ассетов
 import bgDay from '../assets/background-day.png';
 import base from '../assets/base.png';
+import menuBg from '../assets/background-day.png';
+import gameOverImage from '../assets/gameover.png';
+
+// Импорт числовых ассетов
+import number0 from '../assets/numbers/0.png';
+import number1 from '../assets/numbers/1.png';
+import number2 from '../assets/numbers/2.png';
+import number3 from '../assets/numbers/3.png';
+import number4 from '../assets/numbers/4.png';
+import number5 from '../assets/numbers/5.png';
+import number6 from '../assets/numbers/6.png';
+import number7 from '../assets/numbers/7.png';
+import number8 from '../assets/numbers/8.png';
+import number9 from '../assets/numbers/9.png';
 
 export default class Game {
 	constructor(width, height) {
 		this.width = width;
 		this.height = height;
 
-		this.isGameActive = false;
-		this.isGameOver = false;
+		// Состояния игры: "MENU", "PLAY", "PAUSE", "GAMEOVER"
+		this.state = 'MENU';
+
 		this.score = 0;
 		this.bestScore = localStorage.getItem('bestScore') || 0;
 
@@ -21,44 +36,68 @@ export default class Game {
 
 		// Скорость труб
 		this.pipeSpeed = 3;
-		// Интервал (в кадрах) между появлением труб
 		this.pipeSpawnInterval = 100;
 		this.timeSinceLastPipe = 0;
 
-		// Скорость прокрутки земли (можно сделать равной pipeSpeed, если хотите)
+		// Скорость прокрутки земли
 		this.groundSpeed = 2;
 
+		// Создаем PIXI-приложение
 		this.app = new PIXI.Application({
-			width: 480,
-			height: 640,
+			width: this.width,
+			height: this.height,
 			backgroundColor: 0x000000,
 			resolution: window.devicePixelRatio || 1,
 			autoDensity: true,
 		});
-
 		document.body.appendChild(this.app.view);
 
-		// Контейнеры
+		// Основные контейнеры
 		this.menuContainer = new PIXI.Container();
 		this.gameContainer = new PIXI.Container();
+		this.pauseContainer = new PIXI.Container();
 		this.gameOverContainer = new PIXI.Container();
 
-		// Добавляем
 		this.app.stage.addChild(this.menuContainer);
 		this.app.stage.addChild(this.gameContainer);
+		this.app.stage.addChild(this.pauseContainer);
 		this.app.stage.addChild(this.gameOverContainer);
 
+		// Изначально видим только меню
 		this.menuContainer.visible = true;
 		this.gameContainer.visible = false;
+		this.pauseContainer.visible = false;
 		this.gameOverContainer.visible = false;
+
+		// Загружаем текстуры для цифр (0-9)
+		this.numberTextures = [
+			PIXI.Texture.from(number0),
+			PIXI.Texture.from(number1),
+			PIXI.Texture.from(number2),
+			PIXI.Texture.from(number3),
+			PIXI.Texture.from(number4),
+			PIXI.Texture.from(number5),
+			PIXI.Texture.from(number6),
+			PIXI.Texture.from(number7),
+			PIXI.Texture.from(number8),
+			PIXI.Texture.from(number9),
+		];
 
 		this.setupMenu();
 		this.setupGame();
+		this.setupPause();
 		this.setupGameOver();
 		this.setupEventListeners();
 	}
 
 	setupMenu() {
+		// Фон меню
+		const menuBackground = new PIXI.Sprite(PIXI.Texture.from(menuBg));
+		menuBackground.width = this.width;
+		menuBackground.height = this.height;
+		this.menuContainer.addChild(menuBackground);
+
+		// Заголовок
 		const title = new PIXI.Text('FLAPPY BIRD', {
 			fontFamily: 'Arial',
 			fontSize: 40,
@@ -69,7 +108,9 @@ export default class Game {
 		title.anchor.set(0.5);
 		title.x = this.width / 2;
 		title.y = this.height / 3;
+		this.menuContainer.addChild(title);
 
+		// Кнопка "Играть"
 		const startButton = new PIXI.Graphics();
 		startButton.beginFill(0x4caf50);
 		startButton.drawRoundedRect(0, 0, 200, 60, 10);
@@ -79,8 +120,9 @@ export default class Game {
 		startButton.interactive = true;
 		startButton.cursor = 'pointer';
 		startButton.on('pointerdown', () => this.startGame());
+		this.menuContainer.addChild(startButton);
 
-		const startText = new PIXI.Text('СТАРТ', {
+		const startText = new PIXI.Text('ИГРАТЬ', {
 			fontFamily: 'Arial',
 			fontSize: 30,
 			fill: 0xffffff,
@@ -89,101 +131,91 @@ export default class Game {
 		startText.x = 100;
 		startText.y = 30;
 		startButton.addChild(startText);
-
-		const instruction = new PIXI.Text('Нажимайте на экран или пробел, чтобы лететь', {
-			fontFamily: 'Arial',
-			fontSize: 18,
-			fill: 0xffffff,
-			align: 'center',
-		});
-		instruction.anchor.set(0.5);
-		instruction.x = this.width / 2;
-		instruction.y = this.height / 2 + 100;
-
-		this.menuContainer.addChild(title, startButton, instruction);
 	}
 
 	setupGame() {
-		// -------- 1) ФОН --------
+		// Фон игры
 		this.bgSprite = new PIXI.Sprite(PIXI.Texture.from(bgDay));
-		this.bgSprite.width = 480;
-		this.bgSprite.height = 640;
+		this.bgSprite.width = this.width;
+		this.bgSprite.height = this.height;
 		this.bgSprite.x = 0;
 		this.bgSprite.y = 0;
 		this.gameContainer.addChild(this.bgSprite);
 
-		// -------- 2) ПТИЦА --------
+		// Птица
 		this.bird = new Bird(this.width / 4, this.height / 2);
 		this.gameContainer.addChild(this.bird.sprite);
 
-		// -------- 3) ТРУБЫ --------
+		// Трубы
 		this.pipesManager = new PipesManager(this.width, this.height, this.pipeSpeed);
 		this.gameContainer.addChild(this.pipesManager.container);
 
-		// -------- 4) ЗЕМЛЯ (движущаяся) --------
-		// Вместо обычного Sprite используем TilingSprite
+		// Земля как TilingSprite для бесконечной прокрутки
 		const groundTexture = PIXI.Texture.from(base);
 		this.groundSprite = new PIXI.TilingSprite(groundTexture, this.width, 112);
 		this.groundSprite.x = 0;
-		this.groundSprite.y = 640 - 112; // 528
+		this.groundSprite.y = this.height - 112;
 		this.gameContainer.addChild(this.groundSprite);
 
-		// -------- 5) ТЕКСТ СЧЁТА --------
-		this.scoreText = new PIXI.Text('0', {
+		// Контейнер для "живого" счёта (во время игры)
+		this.inGameScoreContainer = new PIXI.Container();
+		// Разместим его ближе к верху экрана
+		this.inGameScoreContainer.x = this.width / 2;
+		this.inGameScoreContainer.y = 60;
+		this.gameContainer.addChild(this.inGameScoreContainer);
+	}
+
+	setupPause() {
+		// Затемненный оверлей
+		const overlay = new PIXI.Graphics();
+		overlay.beginFill(0x000000, 0.5);
+		overlay.drawRect(0, 0, this.width, this.height);
+		overlay.endFill();
+		this.pauseContainer.addChild(overlay);
+
+		// Надпись "ПАУЗА"
+		const pauseText = new PIXI.Text('ПАУЗА', {
 			fontFamily: 'Arial',
-			fontSize: 40,
+			fontSize: 50,
 			fill: 0xffffff,
 			stroke: 0x000000,
 			strokeThickness: 4,
 		});
-		this.scoreText.anchor.set(0.5, 0);
-		this.scoreText.x = this.width / 2;
-		this.scoreText.y = 20;
-		this.gameContainer.addChild(this.scoreText);
-
-		// -------- 6) Маска (опционально) --------
-		// Если хотите, чтобы трубы/птица не вылезали за пределы, можно делать маску:
-		// const maskRect = new PIXI.Graphics();
-		// maskRect.beginFill(0xffffff);
-		// maskRect.drawRect(0, 0, this.width, this.height);
-		// maskRect.endFill();
-		// this.gameContainer.addChild(maskRect);
-		// this.gameContainer.mask = maskRect;
+		pauseText.anchor.set(0.5);
+		pauseText.x = this.width / 2;
+		pauseText.y = this.height / 2;
+		this.pauseContainer.addChild(pauseText);
 	}
 
 	setupGameOver() {
-		const gameOverTitle = new PIXI.Text('GAME OVER', {
-			fontFamily: 'Arial',
-			fontSize: 40,
-			fill: 0xffffff,
-			stroke: 0x000000,
-			strokeThickness: 4,
-		});
-		gameOverTitle.anchor.set(0.5);
-		gameOverTitle.x = this.width / 2;
-		gameOverTitle.y = this.height / 3;
+		// Очищаем контейнер
+		this.gameOverContainer.removeChildren();
 
-		this.finalScoreText = new PIXI.Text('Счёт: 0\nРекорд: 0', {
-			fontFamily: 'Arial',
-			fontSize: 30,
-			fill: 0xffffff,
-			stroke: 0x000000,
-			strokeThickness: 2,
-			align: 'center',
-		});
-		this.finalScoreText.anchor.set(0.5);
-		this.finalScoreText.x = this.width / 2;
-		this.finalScoreText.y = this.height / 2;
+		// Картинка "Game Over" — разместим её чуть выше центра
+		const gameOverSprite = new PIXI.Sprite(PIXI.Texture.from(gameOverImage));
+		gameOverSprite.anchor.set(0.5);
+		gameOverSprite.x = this.width / 2;
+		gameOverSprite.y = this.height / 2 - 100;
+		this.gameOverContainer.addChild(gameOverSprite);
 
+		// Контейнер для отображения финального счета (счёт и рекорд)
+		this.scoreDisplayContainer = new PIXI.Container();
+		// Разместим его по центру, немного ниже "Game Over"
+		this.scoreDisplayContainer.x = this.width / 2;
+		this.scoreDisplayContainer.y = this.height / 2 + 0;
+		this.gameOverContainer.addChild(this.scoreDisplayContainer);
+
+		// Кнопка "Заново" — ещё ниже
 		const restartButton = new PIXI.Graphics();
 		restartButton.beginFill(0x4caf50);
 		restartButton.drawRoundedRect(0, 0, 200, 60, 10);
 		restartButton.endFill();
 		restartButton.x = this.width / 2 - 100;
-		restartButton.y = this.height / 2 + 80;
+		restartButton.y = this.height / 2 + 180;
 		restartButton.interactive = true;
 		restartButton.cursor = 'pointer';
 		restartButton.on('pointerdown', () => this.restartGame());
+		this.gameOverContainer.addChild(restartButton);
 
 		const restartText = new PIXI.Text('ЗАНОВО', {
 			fontFamily: 'Arial',
@@ -194,22 +226,27 @@ export default class Game {
 		restartText.x = 100;
 		restartText.y = 30;
 		restartButton.addChild(restartText);
-
-		this.gameOverContainer.addChild(gameOverTitle, this.finalScoreText, restartButton);
 	}
 
 	setupEventListeners() {
-		// Клик / Тап
+		// Тап/клик для полета
 		this.app.view.addEventListener('pointerdown', () => {
-			if (this.isGameActive && !this.isGameOver) {
+			if (this.state === 'PLAY') {
 				this.bird.flap(this.jumpPower);
 			}
 		});
 
-		// Пробел
+		// Пробел для полета, клавиша P для паузы/возобновления
 		window.addEventListener('keydown', e => {
-			if (e.code === 'Space' && this.isGameActive && !this.isGameOver) {
+			if (e.code === 'Space' && this.state === 'PLAY') {
 				this.bird.flap(this.jumpPower);
+			}
+			if (e.code === 'KeyP') {
+				if (this.state === 'PLAY') {
+					this.pauseGame();
+				} else if (this.state === 'PAUSE') {
+					this.resumeGame();
+				}
 			}
 		});
 
@@ -218,40 +255,44 @@ export default class Game {
 	}
 
 	startGame() {
+		// Переход из меню в игру
 		this.menuContainer.visible = false;
-		this.gameContainer.visible = true;
 		this.gameOverContainer.visible = false;
+		this.pauseContainer.visible = false;
+		this.gameContainer.visible = true;
 
-		this.isGameActive = true;
-		this.isGameOver = false;
+		this.state = 'PLAY';
 		this.score = 0;
-		this.scoreText.text = '0';
+		this.updateInGameScore(); // Обновим счет, чтобы отобразить "0"
 
-		// Сброс
 		this.bird.reset(this.width / 4, this.height / 2);
 		this.pipesManager.reset();
 		this.timeSinceLastPipe = 0;
 
-		// Сразу создаём первую трубу, чтобы не ждать
-		this.pipesManager.spawnPipe();
-
-		// Запускаем цикл
+		// Запуск игрового цикла
 		this.app.ticker.add(this.gameLoop, this);
 	}
 
-	gameLoop(delta) {
-		// Если игра не идёт или уже конец, выходим
-		if (!this.isGameActive || this.isGameOver) return;
+	pauseGame() {
+		if (this.state !== 'PLAY') return;
+		this.state = 'PAUSE';
+		this.pauseContainer.visible = true;
+	}
 
-		// Обновляем птичку и трубы
+	resumeGame() {
+		if (this.state !== 'PAUSE') return;
+		this.state = 'PLAY';
+		this.pauseContainer.visible = false;
+	}
+
+	gameLoop(delta) {
+		if (this.state !== 'PLAY') return;
+
+		// Обновляем объекты
 		this.bird.update(delta, this.gravity);
 		this.pipesManager.update(delta);
-
-		// Прокрутка земли
-		// Меняем tilePosition.x, чтобы земля "уезжала" влево
 		this.groundSprite.tilePosition.x -= this.groundSpeed * delta;
 
-		// Спавн труб по таймеру
 		this.timeSinceLastPipe += delta;
 		if (this.timeSinceLastPipe > this.pipeSpawnInterval) {
 			this.pipesManager.spawnPipe();
@@ -262,29 +303,20 @@ export default class Game {
 		this.checkScore();
 	}
 
-	// ------------------------------
-	// Проверка коллизий
-	// ------------------------------
 	checkCollisions() {
-		// Проверка земли
-		if (this.bird.sprite.y + this.bird.sprite.height / 2 > this.height - this.groundSprite.height) {
+		// Проверка столкновения с землей или потолком
+		if (
+			this.bird.sprite.y + this.bird.sprite.height / 2 > this.height - this.groundSprite.height ||
+			this.bird.sprite.y - this.bird.sprite.height / 2 < 0
+		) {
 			this.gameOver();
 			return;
 		}
 
-		// Проверка верха
-		if (this.bird.sprite.y - this.bird.sprite.height / 2 < 0) {
-			this.gameOver();
-			return;
-		}
-
-		// "Сжатый" прямоугольник птицы
 		const birdBounds = this.getShrinkedBounds(this.bird.sprite, 5);
-
 		for (let pipe of this.pipesManager.pipes) {
 			const topBounds = this.getShrinkedBounds(pipe.topPipe, 2);
 			const bottomBounds = this.getShrinkedBounds(pipe.bottomPipe, 2);
-
 			if (this.isColliding(birdBounds, topBounds) || this.isColliding(birdBounds, bottomBounds)) {
 				this.gameOver();
 				return;
@@ -292,12 +324,10 @@ export default class Game {
 		}
 	}
 
-	// Простой AABB
 	isColliding(a, b) {
 		return !(a.x + a.width < b.x || a.x > b.x + b.width || a.y + a.height < b.y || a.y > b.y + b.height);
 	}
 
-	// "Сжимаем" прямоугольник спрайта (для более точной коллизии)
 	getShrinkedBounds(sprite, margin = 5) {
 		const bounds = sprite.getBounds();
 		return new PIXI.Rectangle(
@@ -308,27 +338,123 @@ export default class Game {
 		);
 	}
 
+	// Проверка прохождения труб (увеличиваем счет)
 	checkScore() {
 		for (let pipe of this.pipesManager.pipes) {
 			if (!pipe.passed && pipe.topPipe.x + pipe.topPipe.width < this.bird.sprite.x) {
 				pipe.passed = true;
 				this.score++;
-				this.scoreText.text = this.score.toString();
+				this.updateInGameScore();
 			}
 		}
 	}
 
+	// Отрисовка счета во время игры картинками
+	updateInGameScore() {
+		this.inGameScoreContainer.removeChildren();
+		const scoreStr = this.score.toString();
+		const digitSpacing = 10;
+		let totalWidth = 0;
+		const digits = [];
+
+		for (let char of scoreStr) {
+			const digit = parseInt(char);
+			const sprite = new PIXI.Sprite(this.numberTextures[digit]);
+			sprite.anchor.set(0.5);
+			digits.push(sprite);
+			totalWidth += sprite.width + digitSpacing;
+		}
+		totalWidth -= digitSpacing;
+
+		let xPos = -totalWidth / 2;
+		digits.forEach(sprite => {
+			sprite.x = xPos + sprite.width / 2;
+			sprite.y = 0;
+			xPos += sprite.width + digitSpacing;
+			this.inGameScoreContainer.addChild(sprite);
+		});
+	}
+
 	gameOver() {
-		this.isGameOver = true;
-		this.isGameActive = false;
+		this.state = 'GAMEOVER';
+		this.app.ticker.remove(this.gameLoop, this);
+
 		if (this.score > this.bestScore) {
 			this.bestScore = this.score;
 			localStorage.setItem('bestScore', this.bestScore);
 		}
-		this.finalScoreText.text = `Счёт: ${this.score}\nРекорд: ${this.bestScore}`;
+
+		// Показываем экран Game Over
+		this.gameContainer.visible = false;
+		this.pauseContainer.visible = false;
+		this.menuContainer.visible = false;
 		this.gameOverContainer.visible = true;
 
-		this.app.ticker.remove(this.gameLoop, this);
+		this.showFinalScore();
+	}
+
+	// Показываем финальный счет и рекорд
+	showFinalScore() {
+		this.scoreDisplayContainer.removeChildren();
+
+		// --- Метка "Счёт"
+		const currentScoreLabel = new PIXI.Text('Счёт:', {
+			fontFamily: 'Arial',
+			fontSize: 28,
+			fill: 0xffffff,
+		});
+		currentScoreLabel.anchor.set(0.5);
+		currentScoreLabel.x = 0;
+		currentScoreLabel.y = -40;
+		this.scoreDisplayContainer.addChild(currentScoreLabel);
+
+		// Цифры текущего счёта
+		const currentScoreContainer = this.createNumberContainer(this.score);
+		currentScoreContainer.y = -5;
+		this.scoreDisplayContainer.addChild(currentScoreContainer);
+
+		// --- Метка "Рекорд"
+		const bestScoreLabel = new PIXI.Text('Рекорд:', {
+			fontFamily: 'Arial',
+			fontSize: 28,
+			fill: 0xffffff,
+		});
+		bestScoreLabel.anchor.set(0.5);
+		bestScoreLabel.x = 0;
+		bestScoreLabel.y = 60;
+		this.scoreDisplayContainer.addChild(bestScoreLabel);
+
+		// Цифры рекорда
+		const bestScoreContainer = this.createNumberContainer(this.bestScore);
+		bestScoreContainer.y = 95;
+		this.scoreDisplayContainer.addChild(bestScoreContainer);
+	}
+
+	// Вспомогательная функция: создать контейнер с цифрами для числа
+	createNumberContainer(number) {
+		const container = new PIXI.Container();
+		const numberStr = number.toString();
+		const digitSpacing = 10;
+		let totalWidth = 0;
+		const digits = [];
+
+		for (let char of numberStr) {
+			const digit = parseInt(char);
+			const sprite = new PIXI.Sprite(this.numberTextures[digit]);
+			sprite.anchor.set(0.5);
+			digits.push(sprite);
+			totalWidth += sprite.width + digitSpacing;
+		}
+		totalWidth -= digitSpacing;
+
+		let xPos = -totalWidth / 2;
+		digits.forEach(sprite => {
+			sprite.x = xPos + sprite.width / 2;
+			sprite.y = 0;
+			xPos += sprite.width + digitSpacing;
+			container.addChild(sprite);
+		});
+		return container;
 	}
 
 	restartGame() {
@@ -337,18 +463,11 @@ export default class Game {
 	}
 
 	handleResize() {
-		// Получаем размеры окна
 		const windowWidth = window.innerWidth;
 		const windowHeight = window.innerHeight;
-
-		// Коэффициент масштабирования
 		const scale = Math.min(windowWidth / this.width, windowHeight / this.height);
-
-		// Обновляем стили canvas
 		this.app.view.style.width = `${this.width * scale}px`;
 		this.app.view.style.height = `${this.height * scale}px`;
-
-		// Центрируем canvas
 		this.app.view.style.position = 'absolute';
 		this.app.view.style.left = `${(windowWidth - this.width * scale) / 2}px`;
 		this.app.view.style.top = `${(windowHeight - this.height * scale) / 2}px`;
