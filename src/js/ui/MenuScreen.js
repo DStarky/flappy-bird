@@ -51,19 +51,5 @@ export default class MenuScreen {
 		startText.x = 100;
 		startText.y = 30;
 		startButton.addChild(startText);
-
-		setTimeout(() => {
-			this.title.style = new PIXI.TextStyle({
-				fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
-				fontSize: 48,
-				fill: 0xffffff,
-			});
-
-			startText.style = new PIXI.TextStyle({
-				fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
-				fontSize: 30,
-				fill: 0xffffff,
-			});
-		}, 100);
 	}
 }
