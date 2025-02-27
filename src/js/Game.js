@@ -170,7 +170,7 @@ export default class Game {
 
 	checkScore() {
 		for (let pipe of this.pipesManager.pipes) {
-			if (!pipe.passed && pipe.topPipe.x + pipe.topPipe.width < this.bird.sprite.x) {
+			if (!pipe.passed && pipe.topPipe.x + pipe.topPipe.width / 2 < this.bird.sprite.x) {
 				pipe.passed = true;
 				this.score++;
 				this.uiManager.updateScore(this.score);
