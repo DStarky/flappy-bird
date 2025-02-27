@@ -21,7 +21,7 @@ export default class Game {
 		this.height = height;
 
 		// Состояния
-		this.state = 'MENU'; // MENU, PLAY, PAUSE, GAMEOVER
+		this.state = 'MENU'; // MENU, PLAY, PAUSE, FALLING, GAMEOVER
 
 		this.score = 0;
 		this.bestScore = localStorage.getItem('bestScore') || 0;
@@ -215,12 +215,32 @@ export default class Game {
 	setupGameOver() {
 		this.gameOverContainer.removeChildren();
 
+		// Создаем контейнер для всего экрана game over
+		this.gameOverUIContainer = new PIXI.Container();
+		this.gameOverContainer.addChild(this.gameOverUIContainer);
+
+		// Изначально скрываем весь UI gameover
+		this.gameOverUIContainer.visible = false;
+
+		// Контейнер для надписи Game Over (для анимации)
+		this.gameOverImageContainer = new PIXI.Container();
+		this.gameOverUIContainer.addChild(this.gameOverImageContainer);
+
+		// Создаем спрайт "Game Over"
 		const gameOverSprite = new PIXI.Sprite(PIXI.Texture.from(gameOverImage));
 		gameOverSprite.anchor.set(0.5);
 		gameOverSprite.x = this.width / 2;
-		gameOverSprite.y = this.height / 2 - 100;
-		this.gameOverContainer.addChild(gameOverSprite);
+		gameOverSprite.y = 0; // Будет настроено внутри контейнера
+		this.gameOverImageContainer.addChild(gameOverSprite);
 
+		// Начальная позиция контейнера изображения Game Over (за пределами экрана снизу)
+		this.gameOverImageContainer.y = this.height + 100;
+
+		// Контейнер для текста счета
+		this.scoreContainer = new PIXI.Container();
+		this.gameOverUIContainer.addChild(this.scoreContainer);
+
+		// Текст счета
 		this.finalScoreText = new PIXI.Text('', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 28,
@@ -229,9 +249,13 @@ export default class Game {
 		});
 		this.finalScoreText.anchor.set(0.5);
 		this.finalScoreText.x = this.width / 2;
-		this.finalScoreText.y = this.height / 2;
-		this.gameOverContainer.addChild(this.finalScoreText);
+		this.finalScoreText.y = 0;
+		this.scoreContainer.addChild(this.finalScoreText);
 
+		// Изначально размещаем контейнер счета за пределами экрана (снизу)
+		this.scoreContainer.y = this.height + 200; // Позиционируем ниже Game Over для задержки
+
+		// Кнопка "ЗАНОВО"
 		const restartButton = new PIXI.Graphics();
 		restartButton.beginFill(0x4caf50);
 		restartButton.drawRoundedRect(0, 0, 200, 60, 10);
@@ -241,7 +265,7 @@ export default class Game {
 		restartButton.interactive = true;
 		restartButton.cursor = 'pointer';
 		restartButton.on('pointerdown', () => this.restartGame());
-		this.gameOverContainer.addChild(restartButton);
+		this.gameOverUIContainer.addChild(restartButton);
 
 		const restartText = new PIXI.Text('ЗАНОВО', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
@@ -252,6 +276,11 @@ export default class Game {
 		restartText.x = 100;
 		restartText.y = 30;
 		restartButton.addChild(restartText);
+
+		// Скрываем кнопку перезапуска изначально
+		restartButton.visible = false;
+		// Сохраняем ссылку на кнопку для последующей анимации
+		this.restartButton = restartButton;
 	}
 
 	// -------------------------
@@ -286,6 +315,7 @@ export default class Game {
 	// START
 	// -------------------------
 	startGame() {
+		// Очищаем все предыдущие обработчики
 		this.app.ticker.remove(this.gameLoop, this);
 
 		this.menuContainer.visible = false;
@@ -300,10 +330,16 @@ export default class Game {
 		this.score = 0;
 		this.scoreText.text = '0';
 
+		// Восстанавливаем скорости, которые могли быть изменены при завершении игры
+		this.pipeSpeed = 3;
+		this.groundSpeed = 2;
+		this.pipesManager.speed = this.pipeSpeed;
+
 		this.bird.reset(this.width / 4, this.height / 2);
 		this.pipesManager.reset();
 		this.timeSinceLastPipe = 0;
 
+		// Добавляем обработчик игрового цикла
 		this.app.ticker.add(this.gameLoop, this);
 	}
 
@@ -324,22 +360,60 @@ export default class Game {
 	// -------------------------
 	// MAIN LOOP
 	// -------------------------
-	gameLoop(delta) {
-		if (this.state !== 'PLAY') return;
+	gameLoop = delta => {
+		if (this.state === 'PLAY') {
+			this.bird.update(delta, this.gravity);
+			this.pipesManager.update(delta);
+			this.groundSprite.tilePosition.x -= this.groundSpeed * delta;
 
-		this.bird.update(delta, this.gravity);
-		this.pipesManager.update(delta);
-		this.groundSprite.tilePosition.x -= this.groundSpeed * delta;
+			this.timeSinceLastPipe += delta;
+			if (this.timeSinceLastPipe > this.pipeSpawnInterval) {
+				this.pipesManager.spawnPipe();
+				this.timeSinceLastPipe = 0;
+			}
 
-		this.timeSinceLastPipe += delta;
-		if (this.timeSinceLastPipe > this.pipeSpawnInterval) {
-			this.pipesManager.spawnPipe();
-			this.timeSinceLastPipe = 0;
+			this.checkCollisions();
+			this.checkScore();
+		} else if (this.state === 'FALLING') {
+			// Птица падает до земли
+			this.bird.update(delta, this.gravity * 1.5); // Увеличиваем гравитацию для более быстрого падения
+
+			// Проверяем, достигла ли птица земли
+			if (this.bird.sprite.y + this.bird.sprite.height / 2 >= this.height - this.groundSprite.height) {
+				// Фиксируем позицию птицы на земле
+				this.bird.sprite.y = this.height - this.groundSprite.height - this.bird.sprite.height / 2;
+
+				// Останавливаем падение
+				this.bird.vy = 0;
+
+				// Воспроизводим звук падения на землю
+				this.playSound('die');
+
+				// Показываем экран окончания игры через короткую задержку
+				setTimeout(() => this.showGameOverScreen(), 300);
+			}
+		} else if (this.state === 'GAMEOVER') {
+			// Анимация появления Game Over
+			if (this.gameOverImageContainer.y > this.height / 2 - 100) {
+				this.gameOverImageContainer.y -= 20 * delta;
+				if (this.gameOverImageContainer.y <= this.height / 2 - 100) {
+					this.gameOverImageContainer.y = this.height / 2 - 100;
+				}
+			}
+
+			// Анимация появления счета с небольшой задержкой после Game Over
+			if (this.gameOverImageContainer.y <= this.height / 2 - 100 && this.scoreContainer.y > this.height / 2) {
+				this.scoreContainer.y -= 20 * delta;
+
+				// Когда счет достигает нужной позиции, останавливаем анимацию и показываем кнопку
+				if (this.scoreContainer.y <= this.height / 2) {
+					this.scoreContainer.y = this.height / 2;
+					this.restartButton.visible = true; // Показываем кнопку перезапуска
+					this.playSound('swoosh'); // Проигрываем звук появления
+				}
+			}
 		}
-
-		this.checkCollisions();
-		this.checkScore();
-	}
+	};
 
 	checkCollisions() {
 		// Проверка на столкновение с землей или потолком
@@ -347,9 +421,6 @@ export default class Game {
 			this.bird.sprite.y + this.bird.sprite.height / 2 > this.height - this.groundSprite.height ||
 			this.bird.sprite.y - this.bird.sprite.height / 2 < 0
 		) {
-			// Воспроизводим звуки столкновения и смерти
-			this.playSound('hit');
-			this.playSound('die');
 			this.gameOver();
 			return;
 		}
@@ -360,9 +431,6 @@ export default class Game {
 			const topBounds = this.getShrinkedBounds(pipe.topPipe, 2);
 			const bottomBounds = this.getShrinkedBounds(pipe.bottomPipe, 2);
 			if (this.isColliding(birdBounds, topBounds) || this.isColliding(birdBounds, bottomBounds)) {
-				// Воспроизводим звуки столкновения и смерти
-				this.playSound('hit');
-				this.playSound('die');
 				this.gameOver();
 				return;
 			}
@@ -399,20 +467,55 @@ export default class Game {
 	// GAME OVER
 	// -------------------------
 	gameOver() {
-		this.state = 'GAMEOVER';
-		this.app.ticker.remove(this.gameLoop, this);
+		if (this.state === 'GAMEOVER' || this.state === 'FALLING') return;
 
+		// Воспроизводим звук столкновения
+		this.playSound('hit');
+
+		// Переходим в состояние падения
+		this.state = 'FALLING';
+
+		// Останавливаем движение труб, но продолжаем анимацию падения
+		this.pipesManager.speed = 0;
+		this.groundSpeed = 0;
+
+		// Задаем высокую скорость падения
+		this.bird.vy = 5;
+
+		// Устанавливаем поворот птички строго вниз (вертикально)
+		this.bird.sprite.rotation = Math.PI / 2; // 90 градусов в радианах
+
+		// Игровой контейнер остаётся видимым, а контейнер GameOver скрыт
+		this.gameOverContainer.visible = true;
+		this.gameOverUIContainer.visible = false;
+	}
+
+	// -------------------------
+	// SHOW GAME OVER SCREEN
+	// -------------------------
+	showGameOverScreen() {
+		// Подготавливаем UI Game Over
 		if (this.score > this.bestScore) {
 			this.bestScore = this.score;
 			localStorage.setItem('bestScore', this.bestScore);
 		}
 
-		this.gameContainer.visible = false;
-		this.pauseContainer.visible = false;
-		this.menuContainer.visible = false;
-		this.gameOverContainer.visible = true;
-
+		// Обновляем текст счета
 		this.finalScoreText.text = `Счёт: ${this.score}\nРекорд: ${this.bestScore}`;
+
+		// Начальное положение для анимации
+		this.gameOverImageContainer.y = this.height + 100;
+		this.scoreContainer.y = this.height + 200;
+		this.restartButton.visible = false;
+
+		// Показываем весь UI сразу после падения
+		this.gameOverUIContainer.visible = true;
+
+		// Устанавливаем состояние GAMEOVER для начала анимации
+		this.state = 'GAMEOVER';
+
+		// Воспроизводим звук при показе экрана
+		this.playSound('swoosh');
 	}
 
 	// -------------------------
@@ -420,6 +523,7 @@ export default class Game {
 	// -------------------------
 	restartGame() {
 		this.gameOverContainer.visible = false;
+		this.gameOverUIContainer.visible = false;
 		this.playSound('swoosh');
 		this.startGame();
 	}
