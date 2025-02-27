@@ -1,4 +1,3 @@
-// File: Game.js
 import * as PIXI from 'pixi.js';
 import Bird from './Bird';
 import PipesManager from './PipesManager';
@@ -8,6 +7,13 @@ import bgDay from '../assets/background-day.png';
 import base from '../assets/base.png';
 import menuBg from '../assets/background-day.png';
 import gameOverImage from '../assets/gameover.png';
+
+// Импорт звуков
+import dieSound from '../assets/sounds/die.wav';
+import flapSound from '../assets/sounds/wing.wav';
+import hitSound from '../assets/sounds/hit.wav';
+import pointSound from '../assets/sounds/point.wav';
+import swooshSound from '../assets/sounds/swoosh.wav';
 
 export default class Game {
 	constructor(width, height) {
@@ -28,6 +34,15 @@ export default class Game {
 		this.pipeSpawnInterval = 100;
 		this.timeSinceLastPipe = 0;
 		this.groundSpeed = 2;
+
+		// Инициализация звуков
+		this.sounds = {
+			die: new Audio(dieSound),
+			flap: new Audio(flapSound),
+			hit: new Audio(hitSound),
+			point: new Audio(pointSound),
+			swoosh: new Audio(swooshSound),
+		};
 
 		// Создаём приложение Pixi
 		this.app = new PIXI.Application({
@@ -61,6 +76,13 @@ export default class Game {
 		this.setupPause();
 		this.setupGameOver();
 		this.setupEventListeners();
+	}
+
+	// Вспомогательный метод для воспроизведения звуков
+	playSound(soundName) {
+		// Сбрасываем звук для возможности повторного воспроизведения
+		this.sounds[soundName].currentTime = 0;
+		this.sounds[soundName].play().catch(e => console.log('Sound playback failed:', e));
 	}
 
 	// -------------------------
@@ -239,12 +261,14 @@ export default class Game {
 		this.app.view.addEventListener('pointerdown', () => {
 			if (this.state === 'PLAY') {
 				this.bird.flap(this.jumpPower);
+				this.playSound('flap');
 			}
 		});
 
 		window.addEventListener('keydown', e => {
 			if (e.code === 'Space' && this.state === 'PLAY') {
 				this.bird.flap(this.jumpPower);
+				this.playSound('flap');
 			}
 			if (e.code === 'KeyP') {
 				if (this.state === 'PLAY') {
@@ -269,6 +293,9 @@ export default class Game {
 		this.pauseContainer.visible = false;
 		this.gameContainer.visible = true;
 
+		// Проигрываем звук перехода в игру
+		this.playSound('swoosh');
+
 		this.state = 'PLAY';
 		this.score = 0;
 		this.scoreText.text = '0';
@@ -284,12 +311,14 @@ export default class Game {
 		if (this.state !== 'PLAY') return;
 		this.state = 'PAUSE';
 		this.pauseContainer.visible = true;
+		this.playSound('swoosh');
 	}
 
 	resumeGame() {
 		if (this.state !== 'PAUSE') return;
 		this.state = 'PLAY';
 		this.pauseContainer.visible = false;
+		this.playSound('swoosh');
 	}
 
 	// -------------------------
@@ -313,19 +342,27 @@ export default class Game {
 	}
 
 	checkCollisions() {
+		// Проверка на столкновение с землей или потолком
 		if (
 			this.bird.sprite.y + this.bird.sprite.height / 2 > this.height - this.groundSprite.height ||
 			this.bird.sprite.y - this.bird.sprite.height / 2 < 0
 		) {
+			// Воспроизводим звуки столкновения и смерти
+			this.playSound('hit');
+			this.playSound('die');
 			this.gameOver();
 			return;
 		}
 
+		// Проверка на столкновение с трубами
 		const birdBounds = this.getShrinkedBounds(this.bird.sprite, 5);
 		for (let pipe of this.pipesManager.pipes) {
 			const topBounds = this.getShrinkedBounds(pipe.topPipe, 2);
 			const bottomBounds = this.getShrinkedBounds(pipe.bottomPipe, 2);
 			if (this.isColliding(birdBounds, topBounds) || this.isColliding(birdBounds, bottomBounds)) {
+				// Воспроизводим звуки столкновения и смерти
+				this.playSound('hit');
+				this.playSound('die');
 				this.gameOver();
 				return;
 			}
@@ -352,6 +389,8 @@ export default class Game {
 				pipe.passed = true;
 				this.score++;
 				this.scoreText.text = this.score.toString();
+				// Проигрываем звук набора очка
+				this.playSound('point');
 			}
 		}
 	}
@@ -381,6 +420,7 @@ export default class Game {
 	// -------------------------
 	restartGame() {
 		this.gameOverContainer.visible = false;
+		this.playSound('swoosh');
 		this.startGame();
 	}
 

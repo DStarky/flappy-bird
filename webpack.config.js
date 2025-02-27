@@ -35,6 +35,18 @@ module.exports = {
 				test: /\.(ttf|woff|woff2|eot)$/,
 				type: 'asset/resource',
 			},
+			{
+				test: /\.(wav|mp3)$/,
+				use: [
+					{
+						loader: 'file-loader',
+						options: {
+							name: '[name].[ext]',
+							outputPath: 'sounds/',
+						},
+					},
+				],
+			},
 		],
 	},
 	plugins: [
@@ -43,9 +55,7 @@ module.exports = {
 			template: './src/index.html',
 		}),
 		new CopyWebpackPlugin({
-			patterns: [
-				{ from: 'src/assets', to: 'assets' },
-			],
+			patterns: [{ from: 'src/assets', to: 'assets' }],
 		}),
 	],
 };
