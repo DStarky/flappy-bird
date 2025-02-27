@@ -1,6 +1,5 @@
 import * as PIXI from 'pixi.js';
 
-// Импортируем три кадра
 import birdUp from '../assets/bird_up.png';
 import birdMid from '../assets/bird_mid.png';
 import birdDown from '../assets/bird_down.png';
@@ -11,7 +10,6 @@ export default class Bird {
 		this.y = y;
 		this.vy = 0;
 
-		// Собираем кадры
 		const frames = [PIXI.Texture.from(birdUp), PIXI.Texture.from(birdMid), PIXI.Texture.from(birdDown)];
 
 		this.sprite = new PIXI.AnimatedSprite(frames);

@@ -1,41 +1,24 @@
-// src/js/ui/MenuScreen.js
 import * as PIXI from 'pixi.js';
 
-// Импорт ассетов
 import menuBg from '../../assets/background-day.png';
 
-/**
- * Класс для экрана меню
- */
 export default class MenuScreen {
-	/**
-	 * @param {number} width - Ширина экрана
-	 * @param {number} height - Высота экрана
-	 * @param {Object} game - Экземпляр основного класса игры
-	 */
 	constructor(width, height, game) {
 		this.width = width;
 		this.height = height;
 		this.game = game;
 
-		// Создаём контейнер
 		this.container = new PIXI.Container();
 
-		// Инициализация элементов меню
 		this._setupMenuElements();
 	}
 
-	/**
-	 * Инициализация элементов меню
-	 */
 	_setupMenuElements() {
-		// Фон меню
 		const menuBackground = new PIXI.Sprite(PIXI.Texture.from(menuBg));
 		menuBackground.width = this.width;
 		menuBackground.height = this.height;
 		this.container.addChild(menuBackground);
 
-		// Заголовок
 		this.title = new PIXI.Text('FLAPPY BIRD', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 40,
@@ -48,7 +31,6 @@ export default class MenuScreen {
 		this.title.y = this.height / 3;
 		this.container.addChild(this.title);
 
-		// Кнопка "ИГРАТЬ"
 		const startButton = new PIXI.Graphics();
 		startButton.beginFill(0x4caf50);
 		startButton.drawRoundedRect(0, 0, 200, 60, 10);
@@ -70,7 +52,6 @@ export default class MenuScreen {
 		startText.y = 30;
 		startButton.addChild(startText);
 
-		// Применяем стили с небольшой задержкой
 		setTimeout(() => {
 			this.title.style = new PIXI.TextStyle({
 				fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
