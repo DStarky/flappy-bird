@@ -217,7 +217,12 @@ export default class Game {
 
 		this.soundManager.play('swoosh');
 
-		this.startGame();
+		this.gameState.transitionTo('MENU');
+		this.uiManager.updateVisibility(this.gameState.current);
+
+		this.bird.reset(this.width / 4, this.height / 2);
+		this.pipesManager.reset();
+		this.score = 0;
 	}
 
 	handleResize() {
