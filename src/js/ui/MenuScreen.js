@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 
 import menuBg from '../../assets/background-day.png';
+import base from '../../assets/base.png';
 
 export default class MenuScreen {
 	constructor(width, height, game) {
@@ -17,7 +18,14 @@ export default class MenuScreen {
 		const menuBackground = new PIXI.Sprite(PIXI.Texture.from(menuBg));
 		menuBackground.width = this.width;
 		menuBackground.height = this.height;
+
 		this.container.addChild(menuBackground);
+
+		const groundTexture = PIXI.Texture.from(base);
+		this.groundSprite = new PIXI.TilingSprite(groundTexture, this.width, 112);
+		this.groundSprite.x = 0;
+		this.groundSprite.y = this.height - 112;
+		this.container.addChild(this.groundSprite);
 
 		this.title = new PIXI.Text('FLAPPY BIRD', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
