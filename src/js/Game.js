@@ -52,6 +52,11 @@ export default class Game {
 
 		this.gameState.transitionTo('MENU');
 		this.uiManager.updateVisibility(this.gameState.current);
+
+		// Включаем музыку по умолчанию при запуске игры
+		setTimeout(() => {
+			this.soundManager.playMusic();
+		}, 500);
 	}
 
 	_initializeGameWorld() {
@@ -96,6 +101,18 @@ export default class Game {
 					this.resumeGame();
 				}
 			}
+			if (e.code === 'KeyM' && this.gameState.current === 'MENU') {
+				const isMusicOn = this.soundManager.toggleMusic();
+				if (this.uiManager && this.uiManager.menuScreen) {
+					this.uiManager.menuScreen.updateMusicButtonIcon(isMusicOn);
+				}
+			}
+			if (e.code === 'KeyS' && this.gameState.current === 'MENU') {
+				const isSoundOn = this.soundManager.toggleSound();
+				if (this.uiManager && this.uiManager.menuScreen) {
+					this.uiManager.menuScreen.updateSoundButtonIcon(isSoundOn);
+				}
+			}
 		});
 
 		window.addEventListener('resize', () => this.handleResize());
@@ -107,6 +124,7 @@ export default class Game {
 		this.gameState.transitionTo('PLAY');
 		this.uiManager.updateVisibility(this.gameState.current);
 		this.soundManager.play('swoosh');
+		this.soundManager.playMusic();
 
 		this.score = 0;
 		this.uiManager.updateScore(this.score);
@@ -127,6 +145,7 @@ export default class Game {
 		this.gameState.transitionTo('PAUSE');
 		this.uiManager.updateVisibility(this.gameState.current);
 		this.soundManager.play('swoosh');
+		this.soundManager.pauseMusic();
 	}
 
 	resumeGame() {
@@ -134,6 +153,7 @@ export default class Game {
 		this.gameState.transitionTo('PLAY');
 		this.uiManager.updateVisibility(this.gameState.current);
 		this.soundManager.play('swoosh');
+		this.soundManager.playMusic();
 	}
 
 	gameLoop = delta => {
@@ -183,6 +203,7 @@ export default class Game {
 		if (this.gameState.current === 'GAMEOVER' || this.gameState.current === 'FALLING') return;
 
 		this.soundManager.play('hit');
+		this.soundManager.pauseMusic();
 
 		this.gameState.transitionTo('FALLING');
 
@@ -216,6 +237,7 @@ export default class Game {
 		this.uiManager.gameOverScreen.resetAnimationSound();
 
 		this.soundManager.play('swoosh');
+		this.soundManager.pauseMusic();
 
 		this.gameState.transitionTo('MENU');
 		this.uiManager.updateVisibility(this.gameState.current);
@@ -223,6 +245,11 @@ export default class Game {
 		this.bird.reset(this.width / 4, this.height / 2);
 		this.pipesManager.reset();
 		this.score = 0;
+
+		// Воспроизводим музыку при возврате в меню
+		setTimeout(() => {
+			this.soundManager.playMusic();
+		}, 500);
 	}
 
 	handleResize() {

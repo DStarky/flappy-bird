@@ -35,7 +35,7 @@ export default class UIManager {
 		this.scoreContainer = this.gameOverScreen.scoreContainer;
 		this.restartButton = this.gameOverScreen.restartButton;
 	}
-	
+
 	_setupGameHUD() {
 		this.scoreText = new PIXI.Text('0', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
@@ -49,7 +49,7 @@ export default class UIManager {
 		this.scoreText.y = 40;
 		this.gameHUD.addChild(this.scoreText);
 	}
-	
+
 	updateVisibility(state) {
 		this.menuContainer.visible = state === 'MENU';
 		this.gameHUD.visible = state === 'PLAY' || state === 'FALLING';
@@ -59,16 +59,21 @@ export default class UIManager {
 			this.gameOverContainer.visible = false;
 			this.gameOverUIContainer.visible = false;
 		}
+
+		if (state === 'MENU') {
+			this.menuScreen.updateMusicButtonIcon(this.game.soundManager.isMusicOn());
+			this.menuScreen.updateSoundButtonIcon(this.game.soundManager.isSoundOn());
+		}
 	}
-	
+
 	updateScore(score) {
 		this.scoreText.text = score.toString();
 	}
-	
-	prepareGameOverScreen() {
-		this.gameOverScreen.prepare(this.game.score, this.game.bestScore);
+
+	prepareGameOverScreen(score, bestScore) {
+		this.gameOverScreen.prepare(score, bestScore);
 	}
-	
+
 	updateGameOverAnimations(delta) {
 		this.gameOverScreen.updateAnimations(delta);
 	}

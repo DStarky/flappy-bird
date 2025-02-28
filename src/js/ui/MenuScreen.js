@@ -59,5 +59,73 @@ export default class MenuScreen {
 		startText.x = 100;
 		startText.y = 30;
 		startButton.addChild(startText);
+
+		this.musicButton = new PIXI.Graphics();
+		this.musicButton.beginFill(0x3f51b5);
+		this.musicButton.drawRoundedRect(0, 0, 50, 50, 10);
+		this.musicButton.endFill();
+		this.musicButton.x = this.width - 70;
+		this.musicButton.y = 20;
+		this.musicButton.interactive = true;
+		this.musicButton.cursor = 'pointer';
+		this.musicButton.on('pointerdown', () => {
+			const isMusicOn = this.game.soundManager.toggleMusic();
+			this.updateMusicButtonIcon(isMusicOn);
+		});
+		this.container.addChild(this.musicButton);
+
+		this.musicIcon = new PIXI.Text('♪', {
+			fontFamily: 'Arial',
+			fontSize: 30,
+			fill: 0xffffff,
+		});
+		this.musicIcon.anchor.set(0.5);
+		this.musicIcon.x = 25;
+		this.musicIcon.y = 25;
+		this.musicButton.addChild(this.musicIcon);
+
+		this.soundButton = new PIXI.Graphics();
+		this.soundButton.beginFill(0xf44336);
+		this.soundButton.drawRoundedRect(0, 0, 50, 50, 10);
+		this.soundButton.endFill();
+		this.soundButton.x = this.width - 70;
+		this.soundButton.y = 80;
+		this.soundButton.interactive = true;
+		this.soundButton.cursor = 'pointer';
+		this.soundButton.on('pointerdown', () => {
+			const isSoundOn = this.game.soundManager.toggleSound();
+			this.updateSoundButtonIcon(isSoundOn);
+		});
+		this.container.addChild(this.soundButton);
+
+		this.soundIcon = new PIXI.Text('🔊', {
+			fontFamily: 'Arial',
+			fontSize: 24,
+			fill: 0xffffff,
+		});
+		this.soundIcon.anchor.set(0.5);
+		this.soundIcon.x = 25;
+		this.soundIcon.y = 25;
+		this.soundButton.addChild(this.soundIcon);
+
+		// Инициализация состояния кнопок
+		this.updateMusicButtonIcon(true);
+		this.updateSoundButtonIcon(true);
+	}
+
+	updateMusicButtonIcon(isMusicOn) {
+		this.musicIcon.text = isMusicOn ? '♪' : '♪̸';
+		this.musicButton.clear();
+		this.musicButton.beginFill(isMusicOn ? 0x3f51b5 : 0x9e9e9e);
+		this.musicButton.drawRoundedRect(0, 0, 50, 50, 10);
+		this.musicButton.endFill();
+	}
+
+	updateSoundButtonIcon(isSoundOn) {
+		this.soundIcon.text = isSoundOn ? '🔊' : '🔇';
+		this.soundButton.clear();
+		this.soundButton.beginFill(isSoundOn ? 0xf44336 : 0x9e9e9e);
+		this.soundButton.drawRoundedRect(0, 0, 50, 50, 10);
+		this.soundButton.endFill();
 	}
 }
