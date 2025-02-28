@@ -200,7 +200,6 @@ export default class Game {
 				pipe.passed = true;
 				this.score++;
 				this.uiManager.updateScore(this.score);
-				this.soundManager.play('point');
 			}
 		}
 	}

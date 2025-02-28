@@ -40,6 +40,7 @@ export default class CollisionManager {
 			if (this.isColliding(birdBounds, coinBounds)) {
 				if (coin.collect()) {
 					this.game.collectCoin();
+					this.game.soundManager.play('point');
 				}
 			}
 		}
