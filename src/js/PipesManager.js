@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 import pipeUp from '../assets/pipe-green-up.png';
 import pipeDown from '../assets/pipe-green-down.png';
+import Coin from './Coin';
 
 export default class PipesManager {
 	constructor(screenWidth, screenHeight, speed) {
@@ -10,6 +11,7 @@ export default class PipesManager {
 
 		this.container = new PIXI.Container();
 		this.pipes = [];
+		this.coins = [];
 
 		this.pipeWidth = 52;
 		this.pipeHeight = 320;
@@ -18,6 +20,8 @@ export default class PipesManager {
 
 		this.minGapY = this.screenHeight - (this.pipeHeight + this.gapHeight / 2);
 		this.maxGapY = this.pipeHeight + this.gapHeight / 2;
+
+		this.coinSpawnChance = 0.9;
 	}
 
 	spawnPipe() {
@@ -42,6 +46,18 @@ export default class PipesManager {
 			bottomPipe,
 			passed: false,
 		});
+
+		if (Math.random() < this.coinSpawnChance) {
+			this.spawnCoin(pipeX, gapY);
+		}
+	}
+
+	spawnCoin(pipeX, gapY) {
+		const coin = new Coin(pipeX, gapY);
+		this.coins.push(coin);
+		this.container.addChild(coin.sprite);
+
+		return coin;
 	}
 
 	update(delta) {
@@ -57,6 +73,20 @@ export default class PipesManager {
 				i--;
 			}
 		}
+
+		for (let i = 0; i < this.coins.length; i++) {
+			const coin = this.coins[i];
+			coin.update(delta, this.speed);
+
+			if (coin.sprite.x + coin.sprite.width < 0 || (coin.collected && coin.sprite.alpha <= 0)) {
+				this.container.removeChild(coin.sprite);
+				this.coins.splice(i, 1);
+				i--;
+			} else if (coin.collected) {
+				coin.sprite.alpha -= 0.05 * delta;
+				coin.sprite.y -= 1 * delta;
+			}
+		}
 	}
 
 	reset() {
@@ -65,5 +95,10 @@ export default class PipesManager {
 			this.container.removeChild(pipe.bottomPipe);
 		}
 		this.pipes = [];
+
+		for (const coin of this.coins) {
+			this.container.removeChild(coin.sprite);
+		}
+		this.coins = [];
 	}
 }

@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 
 import gameOverImage from '../../assets/gameover.png';
+import coinImg from '../../assets/MonedaD.png';
 
 export default class GameOverScreen {
 	constructor(width, height, game) {
@@ -41,6 +42,30 @@ export default class GameOverScreen {
 		this.finalScoreText.y = 0;
 		this.scoreContainer.addChild(this.finalScoreText);
 
+		this.coinInfoContainer = new PIXI.Container();
+		this.coinInfoContainer.x = this.width / 2;
+		this.coinInfoContainer.y = 80;
+		this.scoreContainer.addChild(this.coinInfoContainer);
+
+		const coinBaseTexture = PIXI.BaseTexture.from(coinImg);
+		const coinTexture = new PIXI.Texture(coinBaseTexture, new PIXI.Rectangle(0, 0, 16, 16));
+		this.coinIcon = new PIXI.Sprite(coinTexture);
+		this.coinIcon.scale.set(1.5);
+		this.coinIcon.anchor.set(1, 0.5);
+		this.coinIcon.x = -5;
+		this.coinInfoContainer.addChild(this.coinIcon);
+
+		this.coinsCollectedText = new PIXI.Text('0', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 24,
+			fill: 0xffd700,
+			stroke: 0x000000,
+			strokeThickness: 3,
+		});
+		this.coinsCollectedText.anchor.set(0, 0.5);
+		this.coinsCollectedText.x = 5;
+		this.coinInfoContainer.addChild(this.coinsCollectedText);
+
 		this.scoreContainer.y = this.height + 200;
 
 		this.restartButton = new PIXI.Graphics();
@@ -67,8 +92,11 @@ export default class GameOverScreen {
 		this.restartButton.visible = false;
 	}
 
-	prepare(score, bestScore) {
+	prepare(score, bestScore, coinsCollected = 0) {
 		this.finalScoreText.text = `Счёт: ${score}\nРекорд: ${bestScore}`;
+		this.coinsCollectedText.text = `+${coinsCollected}`;
+
+		this.coinInfoContainer.visible = coinsCollected > 0;
 
 		this.gameOverImageContainer.y = this.height + 100;
 		this.scoreContainer.y = this.height + 200;

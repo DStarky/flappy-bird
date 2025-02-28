@@ -23,6 +23,26 @@ export default class CollisionManager {
 				return;
 			}
 		}
+
+		this.checkCoinCollisions(birdBounds);
+	}
+
+	checkCoinCollections() {
+		const birdBounds = this.getShrinkedBounds(this.game.bird.sprite, 5);
+		this.checkCoinCollisions(birdBounds);
+	}
+
+	checkCoinCollisions(birdBounds) {
+		for (let coin of this.game.pipesManager.coins) {
+			if (coin.collected) continue;
+
+			const coinBounds = this.getShrinkedBounds(coin.sprite, 2);
+			if (this.isColliding(birdBounds, coinBounds)) {
+				if (coin.collect()) {
+					this.game.collectCoin();
+				}
+			}
+		}
 	}
 
 	isColliding(a, b) {

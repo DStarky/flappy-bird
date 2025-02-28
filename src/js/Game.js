@@ -25,6 +25,9 @@ export default class Game {
 
 		this.score = 0;
 		this.bestScore = localStorage.getItem('bestScore') || 0;
+
+		this.coins = parseInt(localStorage.getItem('coins')) || 0;
+
 		this.timeSinceLastPipe = 0;
 
 		this.app = new PIXI.Application({
@@ -53,7 +56,8 @@ export default class Game {
 		this.gameState.transitionTo('MENU');
 		this.uiManager.updateVisibility(this.gameState.current);
 
-		// Включаем музыку по умолчанию при запуске игры
+		this.uiManager.updateCoins(this.coins);
+
 		setTimeout(() => {
 			this.soundManager.playMusic();
 		}, 500);
@@ -129,6 +133,8 @@ export default class Game {
 		this.score = 0;
 		this.uiManager.updateScore(this.score);
 
+		this.coinsCollectedThisRound = 0;
+
 		this.pipeSpeed = 3;
 		this.groundSpeed = 2;
 		this.pipesManager.speed = this.pipeSpeed;
@@ -199,6 +205,15 @@ export default class Game {
 		}
 	}
 
+	collectCoin() {
+		this.coins++;
+		this.coinsCollectedThisRound = (this.coinsCollectedThisRound || 0) + 1;
+
+		this.uiManager.updateCoins(this.coins);
+
+		localStorage.setItem('coins', this.coins);
+	}
+
 	gameOver() {
 		if (this.gameState.current === 'GAMEOVER' || this.gameState.current === 'FALLING') return;
 
@@ -223,7 +238,7 @@ export default class Game {
 			localStorage.setItem('bestScore', this.bestScore);
 		}
 
-		this.uiManager.prepareGameOverScreen(this.score, this.bestScore);
+		this.uiManager.prepareGameOverScreen(this.score, this.bestScore, this.coinsCollectedThisRound);
 
 		this.gameState.transitionTo('GAMEOVER');
 
@@ -246,7 +261,6 @@ export default class Game {
 		this.pipesManager.reset();
 		this.score = 0;
 
-		// Воспроизводим музыку при возврате в меню
 		setTimeout(() => {
 			this.soundManager.playMusic();
 		}, 500);
