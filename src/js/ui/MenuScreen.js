@@ -2,6 +2,10 @@ import * as PIXI from 'pixi.js';
 
 import menuBg from '../../assets/background-day.png';
 import base from '../../assets/base.png';
+import musicOnImg from '../../assets/ui/music-on.png';
+import musicOffImg from '../../assets/ui/music-off.png';
+import soundsOnImg from '../../assets/ui/sounds-on.png';
+import soundsOffImg from '../../assets/ui/sounds-off.png';
 
 export default class MenuScreen {
 	constructor(width, height, game) {
@@ -18,7 +22,6 @@ export default class MenuScreen {
 		const menuBackground = new PIXI.Sprite(PIXI.Texture.from(menuBg));
 		menuBackground.width = this.width;
 		menuBackground.height = this.height;
-
 		this.container.addChild(menuBackground);
 
 		const groundTexture = PIXI.Texture.from(base);
@@ -60,72 +63,63 @@ export default class MenuScreen {
 		startText.y = 30;
 		startButton.addChild(startText);
 
-		this.musicButton = new PIXI.Graphics();
-		this.musicButton.beginFill(0x3f51b5);
-		this.musicButton.drawRoundedRect(0, 0, 50, 50, 10);
-		this.musicButton.endFill();
-		this.musicButton.x = this.width - 70;
-		this.musicButton.y = 20;
+		this._createButtons();
+	}
+
+	_createButtons() {
+		// Создаем контейнеры для кнопок, чтобы предотвратить смещение при нажатии
+		this.musicButtonContainer = new PIXI.Container();
+		this.musicButtonContainer.x = this.width - 50;
+		this.musicButtonContainer.y = 40;
+		this.container.addChild(this.musicButtonContainer);
+
+		this.soundButtonContainer = new PIXI.Container();
+		this.soundButtonContainer.x = this.width - 50;
+		this.soundButtonContainer.y = 110;
+		this.container.addChild(this.soundButtonContainer);
+
+		// Загружаем текстуры для кнопок
+		this.musicOnTexture = PIXI.Texture.from(musicOnImg);
+		this.musicOffTexture = PIXI.Texture.from(musicOffImg);
+		this.soundOnTexture = PIXI.Texture.from(soundsOnImg);
+		this.soundOffTexture = PIXI.Texture.from(soundsOffImg);
+
+		// Создаем спрайты кнопок
+		this.musicButton = new PIXI.Sprite(this.musicOnTexture);
+		this.musicButton.anchor.set(0.5);
+		this.musicButton.scale.set(2.0);
+		this.musicButtonContainer.addChild(this.musicButton);
+
+		this.soundButton = new PIXI.Sprite(this.soundOnTexture);
+		this.soundButton.anchor.set(0.5);
+		this.soundButton.scale.set(2.0);
+		this.soundButtonContainer.addChild(this.soundButton);
+
+		// Сами спрайты делаем интерактивными
 		this.musicButton.interactive = true;
 		this.musicButton.cursor = 'pointer';
 		this.musicButton.on('pointerdown', () => {
 			const isMusicOn = this.game.soundManager.toggleMusic();
 			this.updateMusicButtonIcon(isMusicOn);
 		});
-		this.container.addChild(this.musicButton);
 
-		this.musicIcon = new PIXI.Text('♪', {
-			fontFamily: 'Arial',
-			fontSize: 30,
-			fill: 0xffffff,
-		});
-		this.musicIcon.anchor.set(0.5);
-		this.musicIcon.x = 25;
-		this.musicIcon.y = 25;
-		this.musicButton.addChild(this.musicIcon);
-
-		this.soundButton = new PIXI.Graphics();
-		this.soundButton.beginFill(0xf44336);
-		this.soundButton.drawRoundedRect(0, 0, 50, 50, 10);
-		this.soundButton.endFill();
-		this.soundButton.x = this.width - 70;
-		this.soundButton.y = 80;
 		this.soundButton.interactive = true;
 		this.soundButton.cursor = 'pointer';
 		this.soundButton.on('pointerdown', () => {
 			const isSoundOn = this.game.soundManager.toggleSound();
 			this.updateSoundButtonIcon(isSoundOn);
 		});
-		this.container.addChild(this.soundButton);
 
-		this.soundIcon = new PIXI.Text('🔊', {
-			fontFamily: 'Arial',
-			fontSize: 24,
-			fill: 0xffffff,
-		});
-		this.soundIcon.anchor.set(0.5);
-		this.soundIcon.x = 25;
-		this.soundIcon.y = 25;
-		this.soundButton.addChild(this.soundIcon);
-
-		// Инициализация состояния кнопок
-		this.updateMusicButtonIcon(true);
-		this.updateSoundButtonIcon(true);
+		// Устанавливаем начальное состояние
+		this.updateMusicButtonIcon(this.game.soundManager.isMusicOn());
+		this.updateSoundButtonIcon(this.game.soundManager.isSoundOn());
 	}
 
 	updateMusicButtonIcon(isMusicOn) {
-		this.musicIcon.text = isMusicOn ? '♪' : '♪̸';
-		this.musicButton.clear();
-		this.musicButton.beginFill(isMusicOn ? 0x3f51b5 : 0x9e9e9e);
-		this.musicButton.drawRoundedRect(0, 0, 50, 50, 10);
-		this.musicButton.endFill();
+		this.musicButton.texture = isMusicOn ? this.musicOnTexture : this.musicOffTexture;
 	}
 
 	updateSoundButtonIcon(isSoundOn) {
-		this.soundIcon.text = isSoundOn ? '🔊' : '🔇';
-		this.soundButton.clear();
-		this.soundButton.beginFill(isSoundOn ? 0xf44336 : 0x9e9e9e);
-		this.soundButton.drawRoundedRect(0, 0, 50, 50, 10);
-		this.soundButton.endFill();
+		this.soundButton.texture = isSoundOn ? this.soundOnTexture : this.soundOffTexture;
 	}
 }
