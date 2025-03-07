@@ -27,6 +27,8 @@ export default class Game {
 		this.bestScore = localStorage.getItem('bestScore') || 0;
 
 		this.coins = parseInt(localStorage.getItem('coins')) || 0;
+		this.hasShieldActive = false;
+		this.isInvulnerable = false;
 
 		this.timeSinceLastPipe = 0;
 
@@ -72,10 +74,12 @@ export default class Game {
 		this.bgSprite.height = this.height;
 		this.gameContainer.addChild(this.bgSprite);
 
-		this.bird = new Bird(this.width / 4, this.height / 2);
+		this.bird = new Bird(this.width / 4, this.height / 2, this);
 		this.gameContainer.addChild(this.bird.sprite);
 
-		this.pipesManager = new PipesManager(this.width, this.height, this.pipeSpeed);
+		this.gameContainer.addChild(this.bird.shieldEffect.container);
+
+		this.pipesManager = new PipesManager(this.width, this.height, this.pipeSpeed, this);
 		this.gameContainer.addChild(this.pipesManager.container);
 
 		const groundTexture = PIXI.Texture.from(base);
@@ -134,6 +138,8 @@ export default class Game {
 		this.uiManager.updateScore(this.score);
 
 		this.coinsCollectedThisRound = 0;
+		this.hasShieldActive = false;
+		this.isInvulnerable = false;
 
 		this.pipeSpeed = 3;
 		this.groundSpeed = 2;
@@ -181,8 +187,9 @@ export default class Game {
 		} else if (this.gameState.current === 'FALLING') {
 			this.bird.update(delta, this.gravity * 1.5);
 
-			if (this.bird.sprite.y + this.bird.sprite.height / 2 >= this.height - this.groundSprite.height) {
-				this.bird.sprite.y = this.height - this.groundSprite.height - this.bird.sprite.height / 2;
+			const groundY = this.height - this.groundSprite.height;
+			if (this.bird.sprite.y + this.bird.sprite.height / 2 >= groundY) {
+				this.bird.sprite.y = groundY - this.bird.sprite.height / 2;
 				this.bird.vy = 0;
 
 				this.soundManager.play('die');
@@ -211,6 +218,22 @@ export default class Game {
 		this.uiManager.updateCoins(this.coins);
 
 		localStorage.setItem('coins', this.coins);
+	}
+
+	collectShield() {
+		if (!this.hasShieldActive && !this.isInvulnerable) {
+			this.bird.activateShield();
+			this.hasShieldActive = true;
+
+			this.soundManager.play('point');
+
+			if (this.uiManager.updateShieldStatus) {
+				this.uiManager.updateShieldStatus(true);
+			}
+
+			return true;
+		}
+		return false;
 	}
 
 	gameOver() {
@@ -259,6 +282,7 @@ export default class Game {
 		this.bird.reset(this.width / 4, this.height / 2);
 		this.pipesManager.reset();
 		this.score = 0;
+		this.hasShieldActive = false;
 
 		setTimeout(() => {
 			this.soundManager.playMusic();

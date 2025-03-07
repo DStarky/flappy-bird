@@ -119,6 +119,8 @@ export default class UIManager {
 		this.menuCoinText.text = coins.toString();
 	}
 
+	updateShieldStatus(isActive) {}
+
 	prepareGameOverScreen(score, bestScore, coinsCollected = 0) {
 		this.gameOverScreen.prepare(score, bestScore, coinsCollected);
 	}

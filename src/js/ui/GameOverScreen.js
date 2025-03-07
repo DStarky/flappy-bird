@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 
 import gameOverImage from '../../assets/gameover.png';
 import coinImg from '../../assets/MonedaD.png';
+import shieldImg from '../../assets/shield.png';
 
 export default class GameOverScreen {
 	constructor(width, height, game) {
@@ -42,10 +43,14 @@ export default class GameOverScreen {
 		this.finalScoreText.y = 0;
 		this.scoreContainer.addChild(this.finalScoreText);
 
+		this.collectiblesContainer = new PIXI.Container();
+		this.collectiblesContainer.x = this.width / 2;
+		this.collectiblesContainer.y = 80;
+		this.scoreContainer.addChild(this.collectiblesContainer);
+
 		this.coinInfoContainer = new PIXI.Container();
-		this.coinInfoContainer.x = this.width / 2;
-		this.coinInfoContainer.y = 80;
-		this.scoreContainer.addChild(this.coinInfoContainer);
+		this.coinInfoContainer.y = 0;
+		this.collectiblesContainer.addChild(this.coinInfoContainer);
 
 		const coinBaseTexture = PIXI.BaseTexture.from(coinImg);
 		const coinTexture = new PIXI.Texture(coinBaseTexture, new PIXI.Rectangle(0, 0, 16, 16));
@@ -65,6 +70,27 @@ export default class GameOverScreen {
 		this.coinsCollectedText.anchor.set(0, 0.5);
 		this.coinsCollectedText.x = 5;
 		this.coinInfoContainer.addChild(this.coinsCollectedText);
+
+		this.shieldInfoContainer = new PIXI.Container();
+		this.shieldInfoContainer.y = 35;
+		this.collectiblesContainer.addChild(this.shieldInfoContainer);
+
+		this.shieldIcon = new PIXI.Sprite(PIXI.Texture.from(shieldImg));
+		this.shieldIcon.scale.set(1);
+		this.shieldIcon.anchor.set(1, 0.5);
+		this.shieldIcon.x = -5;
+		this.shieldInfoContainer.addChild(this.shieldIcon);
+
+		this.shieldsCollectedText = new PIXI.Text('0', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 24,
+			fill: 0x4fc3f7,
+			stroke: 0x000000,
+			strokeThickness: 3,
+		});
+		this.shieldsCollectedText.anchor.set(0, 0.5);
+		this.shieldsCollectedText.x = 5;
+		this.shieldInfoContainer.addChild(this.shieldsCollectedText);
 
 		this.scoreContainer.y = this.height + 200;
 
@@ -94,9 +120,11 @@ export default class GameOverScreen {
 
 	prepare(score, bestScore, coinsCollected = 0) {
 		this.finalScoreText.text = `Счёт: ${score}\nРекорд: ${bestScore}`;
-		this.coinsCollectedText.text = `+${coinsCollected}`;
 
+		this.coinsCollectedText.text = `+${coinsCollected}`;
 		this.coinInfoContainer.visible = coinsCollected > 0;
+
+		this.shieldInfoContainer.visible = false;
 
 		this.gameOverImageContainer.y = this.height + 100;
 		this.scoreContainer.y = this.height + 200;

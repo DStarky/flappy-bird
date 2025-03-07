@@ -1,14 +1,16 @@
 import * as PIXI from 'pixi.js';
+import ShieldEffect from './ShieldEffect';
 
 import birdUp from '../assets/bird_up.png';
 import birdMid from '../assets/bird_mid.png';
 import birdDown from '../assets/bird_down.png';
 
 export default class Bird {
-	constructor(x, y) {
+	constructor(x, y, game) {
 		this.x = x;
 		this.y = y;
 		this.vy = 0;
+		this.game = game;
 
 		const frames = [PIXI.Texture.from(birdUp), PIXI.Texture.from(birdMid), PIXI.Texture.from(birdDown)];
 
@@ -18,6 +20,8 @@ export default class Bird {
 		this.sprite.anchor.set(0.5);
 		this.sprite.x = x;
 		this.sprite.y = y;
+
+		this.shieldEffect = new ShieldEffect(this);
 	}
 
 	flap(jumpPower) {
@@ -31,6 +35,8 @@ export default class Bird {
 		if (this.sprite.rotation < 0.5 && this.vy > 0) {
 			this.sprite.rotation += 0.1 * delta;
 		}
+
+		this.shieldEffect.update(delta);
 	}
 
 	reset(x, y) {
@@ -40,5 +46,31 @@ export default class Bird {
 		this.sprite.x = x;
 		this.sprite.y = y;
 		this.sprite.rotation = 0;
+		this.sprite.tint = 0xffffff;
+		this.sprite.alpha = 1.0;
+
+		this.shieldEffect.deactivate();
+		this.shieldEffect.invulnerable = false;
+	}
+
+	activateShield(duration = 0) {
+		this.shieldEffect.activate(duration);
+	}
+
+	hasActiveShield() {
+		return this.shieldEffect.active;
+	}
+
+	isInvulnerable() {
+		return this.shieldEffect.invulnerable;
+	}
+
+	absorbHit() {
+		if (this.hasActiveShield()) {
+			return this.shieldEffect.absorb();
+		} else if (this.isInvulnerable()) {
+			return true;
+		}
+		return false;
 	}
 }
