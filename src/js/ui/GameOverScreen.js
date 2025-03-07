@@ -35,8 +35,15 @@ export default class GameOverScreen {
 		this.finalScoreText = new PIXI.Text('', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 28,
-			fill: 0xffffff,
+			fill: 0xfca146,
 			align: 'center',
+			stroke: 0x000000,
+			strokeThickness: 6,
+			dropShadow: true,
+			dropShadowColor: 0xffffff,
+			dropShadowDistance: 0,
+			dropShadowBlur: 4,
+			dropShadowAlpha: 1,
 		});
 		this.finalScoreText.anchor.set(0.5);
 		this.finalScoreText.x = this.width / 2;
