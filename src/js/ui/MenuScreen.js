@@ -67,7 +67,6 @@ export default class MenuScreen {
 	}
 
 	_createButtons() {
-		// Создаем контейнеры для кнопок, чтобы предотвратить смещение при нажатии
 		this.musicButtonContainer = new PIXI.Container();
 		this.musicButtonContainer.x = this.width - 50;
 		this.musicButtonContainer.y = 40;
@@ -78,13 +77,11 @@ export default class MenuScreen {
 		this.soundButtonContainer.y = 110;
 		this.container.addChild(this.soundButtonContainer);
 
-		// Загружаем текстуры для кнопок
 		this.musicOnTexture = PIXI.Texture.from(musicOnImg);
 		this.musicOffTexture = PIXI.Texture.from(musicOffImg);
 		this.soundOnTexture = PIXI.Texture.from(soundsOnImg);
 		this.soundOffTexture = PIXI.Texture.from(soundsOffImg);
 
-		// Создаем спрайты кнопок
 		this.musicButton = new PIXI.Sprite(this.musicOnTexture);
 		this.musicButton.anchor.set(0.5);
 		this.musicButton.scale.set(2.0);
@@ -95,7 +92,6 @@ export default class MenuScreen {
 		this.soundButton.scale.set(2.0);
 		this.soundButtonContainer.addChild(this.soundButton);
 
-		// Сами спрайты делаем интерактивными
 		this.musicButton.interactive = true;
 		this.musicButton.cursor = 'pointer';
 		this.musicButton.on('pointerdown', () => {
@@ -110,7 +106,6 @@ export default class MenuScreen {
 			this.updateSoundButtonIcon(isSoundOn);
 		});
 
-		// Устанавливаем начальное состояние
 		this.updateMusicButtonIcon(this.game.soundManager.isMusicOn());
 		this.updateSoundButtonIcon(this.game.soundManager.isSoundOn());
 	}

@@ -38,7 +38,13 @@ export default class CollisionManager {
 			const bottomBounds = this.getShrinkedBounds(pipe.bottomPipe, 2);
 
 			if (this.isColliding(birdBounds, topBounds) || this.isColliding(birdBounds, bottomBounds)) {
-				if (this.game.bird.hasActiveShield() || this.game.bird.isInvulnerable()) {
+				if (this.game.isPepperActive) {
+					if (this.isColliding(birdBounds, topBounds)) {
+						this.game.bird.vy = Math.abs(this.game.bird.vy) * 0.5;
+					} else {
+						this.game.bird.vy = -Math.abs(this.game.bird.vy) * 0.5;
+					}
+				} else if (this.game.bird.hasActiveShield() || this.game.bird.isInvulnerable()) {
 					this.game.bird.absorbHit();
 
 					if (this.isColliding(birdBounds, topBounds)) {
@@ -77,6 +83,19 @@ export default class CollisionManager {
 				if (this.isColliding(birdBounds, shieldBounds)) {
 					if (shield.collect()) {
 						this.game.collectShield();
+					}
+				}
+			}
+		}
+
+		if (!this.game.isPepperActive) {
+			for (let pepper of this.game.pipesManager.peppers) {
+				if (pepper.collected) continue;
+
+				const pepperBounds = this.getShrinkedBounds(pepper.sprite, 2);
+				if (this.isColliding(birdBounds, pepperBounds)) {
+					if (pepper.collect()) {
+						this.game.collectPepper();
 					}
 				}
 			}

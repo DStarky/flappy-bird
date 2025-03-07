@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js';
 import ShieldEffect from './ShieldEffect';
+import PepperEffect from './PepperEffect';
 
 import birdUp from '../assets/bird_up.png';
 import birdMid from '../assets/bird_mid.png';
@@ -22,6 +23,7 @@ export default class Bird {
 		this.sprite.y = y;
 
 		this.shieldEffect = new ShieldEffect(this);
+		this.pepperEffect = new PepperEffect(this);
 	}
 
 	flap(jumpPower) {
@@ -37,6 +39,7 @@ export default class Bird {
 		}
 
 		this.shieldEffect.update(delta);
+		this.pepperEffect.update(delta);
 	}
 
 	reset(x, y) {
@@ -51,14 +54,30 @@ export default class Bird {
 
 		this.shieldEffect.deactivate();
 		this.shieldEffect.invulnerable = false;
+
+		if (this.pepperEffect.active) {
+			this.pepperEffect.deactivate();
+		}
+
+		this.pepperEffect.streakLines = [];
+		this.pepperEffect.streaks.clear();
+		this.pepperEffect.extraInvulnerabilityRemaining = 0;
 	}
 
 	activateShield(duration = 0) {
 		this.shieldEffect.activate(duration);
 	}
 
+	activatePepper() {
+		this.pepperEffect.activate();
+	}
+
 	hasActiveShield() {
 		return this.shieldEffect.active;
+	}
+
+	hasActivePepper() {
+		return this.pepperEffect.active;
 	}
 
 	isInvulnerable() {
@@ -66,6 +85,10 @@ export default class Bird {
 	}
 
 	absorbHit() {
+		if (this.hasActivePepper()) {
+			return true;
+		}
+
 		if (this.hasActiveShield()) {
 			return this.shieldEffect.absorb();
 		} else if (this.isInvulnerable()) {

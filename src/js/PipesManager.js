@@ -3,6 +3,7 @@ import pipeUp from '../assets/pipe-green-up.png';
 import pipeDown from '../assets/pipe-green-down.png';
 import Coin from './Coin';
 import Shield from './Shield';
+import Pepper from './Pepper';
 
 export default class PipesManager {
 	constructor(screenWidth, screenHeight, speed, game) {
@@ -15,6 +16,7 @@ export default class PipesManager {
 		this.pipes = [];
 		this.coins = [];
 		this.shields = [];
+		this.peppers = [];
 
 		this.pipeWidth = 52;
 		this.pipeHeight = 320;
@@ -26,7 +28,9 @@ export default class PipesManager {
 
 		this.coinSpawnChance = 0.9;
 		this.shieldSpawnChance = 0.15;
+		this.pepperSpawnChance = 0.12;
 		this.pipesSinceLastShield = 0;
+		this.pipesSinceLastPepper = 0;
 	}
 
 	spawnPipe() {
@@ -58,8 +62,12 @@ export default class PipesManager {
 
 		const shieldNeeded = !this.game.hasShieldActive && !this.game.isInvulnerable;
 		const hasActiveShields = this.shields.some(shield => !shield.collected);
+		const pepperNeeded = !this.game.isPepperActive;
+		const hasActivePeppers = this.peppers.some(pepper => !pepper.collected);
 
-		if (shieldNeeded && !hasActiveShields) {
+		const anyPowerupActive = hasActiveShields || hasActivePeppers;
+
+		if (shieldNeeded && !anyPowerupActive) {
 			this.pipesSinceLastShield++;
 
 			const adjustedShieldChance = Math.min(0.5, this.shieldSpawnChance * (1 + this.pipesSinceLastShield * 0.1));
@@ -69,8 +77,26 @@ export default class PipesManager {
 					if (this.game.gameState.current === 'PLAY') {
 						this.spawnShieldBetweenPipes();
 					}
-				}, (this.pipeSpawnInterval * 16.67) / 2);
+				}, (this.game.pipeSpawnInterval * 16.67) / 2);
 
+				this.pipesSinceLastShield = 0;
+				this.pipesSinceLastPepper = 0;
+			}
+		}
+
+		if (pepperNeeded && !anyPowerupActive) {
+			this.pipesSinceLastPepper++;
+
+			const adjustedPepperChance = Math.min(0.4, this.pepperSpawnChance * (1 + this.pipesSinceLastPepper * 0.1));
+
+			if (Math.random() < adjustedPepperChance) {
+				setTimeout(() => {
+					if (this.game.gameState.current === 'PLAY') {
+						this.spawnPepperBetweenPipes();
+					}
+				}, (this.game.pipeSpawnInterval * 16.67) / 3);
+
+				this.pipesSinceLastPepper = 0;
 				this.pipesSinceLastShield = 0;
 			}
 		}
@@ -101,6 +127,34 @@ export default class PipesManager {
 		this.container.addChild(shield.sprite);
 
 		return shield;
+	}
+
+	spawnPepperBetweenPipes() {
+		const hasActivePeppers = this.peppers.some(pepper => !pepper.collected);
+		if (hasActivePeppers) {
+			return null;
+		}
+
+		const pepperX = this.screenWidth + 50;
+
+		const randomHeightFactor = Math.random();
+		let pepperY;
+
+		if (randomHeightFactor < 0.3) {
+			pepperY = this.screenHeight * 0.15 + Math.random() * 20;
+		} else if (randomHeightFactor < 0.7) {
+			pepperY = this.screenHeight * 0.5 + Math.random() * 30 - 15;
+		} else {
+			pepperY = this.screenHeight * 0.8 - Math.random() * 20;
+		}
+
+		pepperY = Math.max(30, Math.min(this.screenHeight - 112 - 30, pepperY));
+
+		const pepper = new Pepper(pepperX, pepperY);
+		this.peppers.push(pepper);
+		this.container.addChild(pepper.sprite);
+
+		return pepper;
 	}
 
 	spawnCoin(pipeX, gapY) {
@@ -160,6 +214,20 @@ export default class PipesManager {
 				shield.sprite.y -= 1 * delta;
 			}
 		}
+
+		for (let i = 0; i < this.peppers.length; i++) {
+			const pepper = this.peppers[i];
+			pepper.update(delta, this.speed);
+
+			if (pepper.sprite.x + pepper.sprite.width < 0 || (pepper.collected && pepper.sprite.alpha <= 0)) {
+				this.container.removeChild(pepper.sprite);
+				this.peppers.splice(i, 1);
+				i--;
+			} else if (pepper.collected) {
+				pepper.sprite.alpha -= 0.05 * delta;
+				pepper.sprite.y -= 1 * delta;
+			}
+		}
 	}
 
 	reset() {
@@ -179,6 +247,12 @@ export default class PipesManager {
 		}
 		this.shields = [];
 
+		for (const pepper of this.peppers) {
+			this.container.removeChild(pepper.sprite);
+		}
+		this.peppers = [];
+
 		this.pipesSinceLastShield = 0;
+		this.pipesSinceLastPepper = 0;
 	}
 }

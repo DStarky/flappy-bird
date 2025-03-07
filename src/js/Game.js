@@ -29,6 +29,7 @@ export default class Game {
 		this.coins = parseInt(localStorage.getItem('coins')) || 0;
 		this.hasShieldActive = false;
 		this.isInvulnerable = false;
+		this.isPepperActive = false;
 
 		this.timeSinceLastPipe = 0;
 
@@ -78,6 +79,7 @@ export default class Game {
 		this.gameContainer.addChild(this.bird.sprite);
 
 		this.gameContainer.addChild(this.bird.shieldEffect.container);
+		this.gameContainer.addChild(this.bird.pepperEffect.container);
 
 		this.pipesManager = new PipesManager(this.width, this.height, this.pipeSpeed, this);
 		this.gameContainer.addChild(this.pipesManager.container);
@@ -140,6 +142,7 @@ export default class Game {
 		this.coinsCollectedThisRound = 0;
 		this.hasShieldActive = false;
 		this.isInvulnerable = false;
+		this.isPepperActive = false;
 
 		this.pipeSpeed = 3;
 		this.groundSpeed = 2;
@@ -176,8 +179,10 @@ export default class Game {
 
 			this.groundSprite.tilePosition.x -= this.groundSpeed * delta;
 
+			const effectiveInterval = this.isPepperActive ? this.pipeSpawnInterval / 2.5 : this.pipeSpawnInterval;
+
 			this.timeSinceLastPipe += delta;
-			if (this.timeSinceLastPipe > this.pipeSpawnInterval) {
+			if (this.timeSinceLastPipe > effectiveInterval) {
 				this.pipesManager.spawnPipe();
 				this.timeSinceLastPipe = 0;
 			}
@@ -230,6 +235,18 @@ export default class Game {
 			if (this.uiManager.updateShieldStatus) {
 				this.uiManager.updateShieldStatus(true);
 			}
+
+			return true;
+		}
+		return false;
+	}
+
+	collectPepper() {
+		if (!this.isPepperActive) {
+			this.bird.activatePepper();
+			this.isPepperActive = true;
+
+			this.soundManager.play('point');
 
 			return true;
 		}
