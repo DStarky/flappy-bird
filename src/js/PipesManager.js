@@ -57,8 +57,9 @@ export default class PipesManager {
 		}
 
 		const shieldNeeded = !this.game.hasShieldActive && !this.game.isInvulnerable;
+		const hasActiveShields = this.shields.some(shield => !shield.collected);
 
-		if (shieldNeeded) {
+		if (shieldNeeded && !hasActiveShields) {
 			this.pipesSinceLastShield++;
 
 			const adjustedShieldChance = Math.min(0.5, this.shieldSpawnChance * (1 + this.pipesSinceLastShield * 0.1));
@@ -76,7 +77,11 @@ export default class PipesManager {
 	}
 
 	spawnShieldBetweenPipes() {
-		const shieldX = this.screenWidth + 50; 
+		const hasActiveShields = this.shields.some(shield => !shield.collected);
+		if (hasActiveShields) {
+			return null;
+		}
+		const shieldX = this.screenWidth + 50;
 
 		const randomHeightFactor = Math.random();
 		let shieldY;
