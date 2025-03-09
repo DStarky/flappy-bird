@@ -215,7 +215,17 @@ export default class Game {
 
 			this.groundSprite.tilePosition.x -= this.groundSpeed * delta;
 
+			const previousInterval = this.isPepperActive ? this.pipeSpawnInterval / 2.5 : this.pipeSpawnInterval;
+			const hasPepperStatusChanged = this.bird.pepperEffect.justActivated || this.bird.pepperEffect.justDeactivated;
+
 			const effectiveInterval = this.isPepperActive ? this.pipeSpawnInterval / 2.5 : this.pipeSpawnInterval;
+
+			if (hasPepperStatusChanged) {
+				this.timeSinceLastPipe = (this.timeSinceLastPipe / previousInterval) * effectiveInterval;
+
+				this.bird.pepperEffect.justActivated = false;
+				this.bird.pepperEffect.justDeactivated = false;
+			}
 
 			this.timeSinceLastPipe += delta;
 			if (this.timeSinceLastPipe > effectiveInterval) {

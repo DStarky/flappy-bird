@@ -92,20 +92,28 @@ export default class ShieldEffect {
 		}
 
 		if (this.invulnerable) {
-			this.invulnerabilityTimeRemaining -= delta;
-			this.flashCounter += delta;
+			if (this.invulnerabilityTimeRemaining > 0) {
+				this.invulnerabilityTimeRemaining -= delta;
+				this.flashCounter += delta;
 
-			if (this.flashCounter >= 8) {
-				this.flashCounter = 0;
-				this.bird.sprite.alpha = this.bird.sprite.alpha < 0.5 ? 1.0 : 0.3;
-			}
+				if (this.flashCounter >= 8) {
+					this.flashCounter = 0;
+					this.bird.sprite.alpha = this.bird.sprite.alpha < 0.5 ? 1.0 : 0.3;
+				}
 
-			if (this.invulnerabilityTimeRemaining <= 0) {
-				this.invulnerable = false;
-				this.bird.sprite.alpha = 1.0;
+				if (this.invulnerabilityTimeRemaining <= 0) {
+					if (
+						!this.active &&
+						!this.bird.hasActivePepper() &&
+						(!this.bird.pepperEffect || this.bird.pepperEffect.extraInvulnerabilityRemaining <= 0)
+					) {
+						this.invulnerable = false;
+						this.bird.sprite.alpha = 1.0;
 
-				if (this.bird.game) {
-					this.bird.game.isInvulnerable = false;
+						if (this.bird.game) {
+							this.bird.game.isInvulnerable = false;
+						}
+					}
 				}
 			}
 		}

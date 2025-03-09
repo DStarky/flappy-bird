@@ -10,6 +10,9 @@ export default class PepperEffect {
 		this.extraInvulnerabilityDuration = 2 * 60;
 		this.extraInvulnerabilityRemaining = 0;
 
+		this.justActivated = false;
+		this.justDeactivated = false;
+
 		this.container = new PIXI.Container();
 
 		this.streaks = new PIXI.Graphics();
@@ -27,6 +30,7 @@ export default class PepperEffect {
 		this.timeRemaining = this.duration;
 		this.extraInvulnerabilityRemaining = 0;
 		this.streakLines = [];
+		this.justActivated = true;
 
 		if (this.bird.game) {
 			this.bird.game.isPepperActive = true;
@@ -54,7 +58,10 @@ export default class PepperEffect {
 	}
 
 	deactivate() {
+		if (!this.active) return;
+
 		this.active = false;
+		this.justDeactivated = true;
 
 		if (this.bird.game) {
 			this.bird.game.isPepperActive = false;
@@ -70,6 +77,9 @@ export default class PepperEffect {
 			this.bird.game.pipesManager.speed = this.bird.game.pipeSpeed;
 
 			this.extraInvulnerabilityRemaining = this.extraInvulnerabilityDuration;
+
+			this.bird.shieldEffect.invulnerable = true;
+			this.bird.game.isInvulnerable = true;
 
 			this.bird.shieldEffect.invulnerabilityTimeRemaining = this.extraInvulnerabilityDuration;
 		}
