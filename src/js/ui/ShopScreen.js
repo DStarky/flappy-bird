@@ -62,7 +62,6 @@ export default class ShopScreen {
 	}
 
 	_setupShopElements() {
-		// Создаем фон для магазина
 		const overlay = new PIXI.Graphics();
 		overlay.beginFill(0x000000, 0.85);
 		overlay.drawRect(0, 0, this.width, this.height);
@@ -83,7 +82,7 @@ export default class ShopScreen {
 
 		this.coinInfoContainer = new PIXI.Container();
 		this.coinInfoContainer.x = this.width / 2;
-		this.coinInfoContainer.y = 80;
+		this.coinInfoContainer.y = 95;
 		this.container.addChild(this.coinInfoContainer);
 
 		const coinBaseTexture = PIXI.BaseTexture.from(coinImg);
@@ -92,7 +91,7 @@ export default class ShopScreen {
 		this.coinIcon = new PIXI.Sprite(coinTexture);
 		this.coinIcon.scale.set(2);
 		this.coinIcon.anchor.set(1, 0.5);
-		this.coinIcon.x = -10;
+		this.coinIcon.x = -5;
 		this.coinInfoContainer.addChild(this.coinIcon);
 
 		this.coinText = new PIXI.Text('0', {
@@ -101,13 +100,14 @@ export default class ShopScreen {
 			fill: 0xffd700,
 			stroke: 0x000000,
 			strokeThickness: 3,
+			align: 'center',
 		});
 		this.coinText.anchor.set(0, 0.5);
-		this.coinText.x = 10;
+		this.coinText.x = 5;
 		this.coinInfoContainer.addChild(this.coinText);
 
 		this.itemsContainer = new PIXI.Container();
-		this.itemsContainer.x = this.width / 2 - 150;
+		this.itemsContainer.x = this.width / 2 - 225;
 		this.itemsContainer.y = 130;
 		this.container.addChild(this.itemsContainer);
 
@@ -118,11 +118,11 @@ export default class ShopScreen {
 
 		for (let i = 0; i < this.items.length; i++) {
 			const item = this.items[i];
-			const y = i * 120;
+			const y = i * 90;
 
 			const itemButton = new PIXI.Graphics();
 			itemButton.beginFill(0x2980b9);
-			itemButton.drawRoundedRect(0, 0, 300, 100, 10);
+			itemButton.drawRoundedRect(0, 0, 450, 75, 10);
 			itemButton.endFill();
 			itemButton.y = y;
 			itemButton.interactive = true;
@@ -140,63 +140,47 @@ export default class ShopScreen {
 				strokeThickness: 2,
 			});
 			itemName.x = 15;
-			itemName.y = 15;
+			itemName.y = 12;
 			itemButton.addChild(itemName);
 			this.itemTexts.push(itemName);
 
 			const itemDescription = new PIXI.Text(item.description, {
 				fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
-				fontSize: 16,
+				fontSize: 13,
 				fill: 0xe0e0e0,
 				wordWrap: true,
-				wordWrapWidth: 220,
+				wordWrapWidth: 370,
 			});
 			itemDescription.x = 15;
-			itemDescription.y = 50;
+			itemDescription.y = 45;
 			itemButton.addChild(itemDescription);
 
-			let itemIcon;
-
-			if (item.id === 'shield') {
-				itemIcon = new PIXI.Sprite(PIXI.Texture.from(shieldImg));
-				itemIcon.scale.set(0.7); 
-			} else if (item.id === 'pepper') {
-				itemIcon = new PIXI.Sprite(PIXI.Texture.from(pepperImg));
-				itemIcon.scale.set(0.8); 
-			} else {
-				const difficultyIcon = new PIXI.Graphics();
-				if (item.id === 'medium_difficulty') {
-					difficultyIcon.beginFill(0xf39c12);
-				} else {
-					difficultyIcon.beginFill(0xe74c3c);
-				}
-				difficultyIcon.drawRoundedRect(0, 0, 20, 20, 4);
-				difficultyIcon.endFill();
-				itemIcon = difficultyIcon;
+			if (item.id === 'shield' || item.id === 'pepper') {
+				itemDescription.style.fontSize = 12;
+				itemDescription.style.wordWrapWidth = 380;
 			}
 
-			itemIcon.x = 260;
-			itemIcon.y = 25;
-			itemButton.addChild(itemIcon);
-
 			const priceContainer = new PIXI.Container();
-			priceContainer.x = 250;
-			priceContainer.y = 70;
+			priceContainer.x = 370;
+			priceContainer.y = 37.5;
 			itemButton.addChild(priceContainer);
 
 			const priceIcon = new PIXI.Sprite(coinTexture);
 			priceIcon.scale.set(1.2);
 			priceIcon.anchor.set(1, 0.5);
-			priceIcon.x = 0;
+			priceIcon.x = -5;
 			priceContainer.addChild(priceIcon);
 
-			const priceText = new PIXI.Text(item.price.toString(), {
+			const priceValue = item.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+			const priceText = new PIXI.Text(priceValue, {
 				fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 				fontSize: 18,
 				fill: 0xffd700,
 				stroke: 0x000000,
 				strokeThickness: 2,
+				align: 'center',
 			});
+
 			priceText.anchor.set(0, 0.5);
 			priceText.x = 5;
 			priceContainer.addChild(priceText);
@@ -210,8 +194,8 @@ export default class ShopScreen {
 				strokeThickness: 2,
 			});
 			unlockedLabel.anchor.set(0.5);
-			unlockedLabel.x = 150;
-			unlockedLabel.y = 70;
+			unlockedLabel.x = 225;
+			unlockedLabel.y = 37.5;
 			unlockedLabel.visible = false;
 			itemButton.addChild(unlockedLabel);
 			this.itemLabels.push(unlockedLabel);
@@ -269,7 +253,8 @@ export default class ShopScreen {
 	}
 
 	_updateShopItems() {
-		this.coinText.text = this.game.coins.toString();
+		const formattedCoins = this.game.coins.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+		this.coinText.text = formattedCoins;
 
 		for (let i = 0; i < this.items.length; i++) {
 			const item = this.items[i];
@@ -306,12 +291,14 @@ export default class ShopScreen {
 	}
 
 	updateCoins(coins) {
-		this.coinText.text = coins.toString();
+		const formattedCoins = coins.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+		this.coinText.text = formattedCoins;
 		this._updateShopItems();
 	}
 
 	open() {
-		this.coinText.text = this.game.coins.toString();
+		const formattedCoins = this.game.coins.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+		this.coinText.text = formattedCoins;
 		this._updateShopItems();
 		this.container.visible = true;
 	}
