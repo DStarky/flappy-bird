@@ -18,6 +18,7 @@ export default class Game {
 		this.gameState = new GameState();
 		this.soundManager = new SoundManager();
 		this.difficultyManager = new DifficultyManager();
+		this.ysdk = null;
 
 		const difficultySettings = this.difficultyManager.getDifficultySettings();
 		this.gravity = difficultySettings.gravity;
@@ -37,6 +38,8 @@ export default class Game {
 		this.isPepperActive = false;
 
 		this.timeSinceLastPipe = 0;
+		this.saveDataTimer = 0;
+		this.saveDataInterval = 10 * 60;
 
 		this.app = new PIXI.Application({
 			width: this.width,
@@ -56,6 +59,7 @@ export default class Game {
 		this.app.stage.addChild(this.uiManager.pauseContainer);
 		this.app.stage.addChild(this.uiManager.gameOverContainer);
 		this.app.stage.addChild(this.uiManager.shopContainer);
+		this.app.stage.addChild(this.uiManager.leaderboardContainer);
 
 		this.collisionManager = new CollisionManager(this);
 
@@ -131,6 +135,9 @@ export default class Game {
 					this.uiManager.menuScreen.updateSoundButtonIcon(isSoundOn);
 				}
 			}
+			if (e.code === 'KeyL' && this.gameState.current === 'MENU') {
+				this.openLeaderboard();
+			}
 			if (e.code === 'Digit1' && this.gameState.current === 'MENU') {
 				this.setDifficulty('easy');
 			}
@@ -155,7 +162,6 @@ export default class Game {
 	setDifficulty(difficulty) {
 		if (!this.difficultyManager.isDifficultyUnlocked(difficulty)) {
 			this.soundManager.play('hit');
-			// Просто воспроизводим звук ошибки без анимации движения
 			return;
 		}
 
@@ -186,6 +192,11 @@ export default class Game {
 		this.soundManager.play('swoosh');
 		this.soundManager.playMusic();
 
+		if (this.ysdk) {
+			this.ysdk.startGamePlay();
+			this.ysdk.showBanner(false);
+		}
+
 		const difficultySettings = this.difficultyManager.getDifficultySettings();
 
 		this.gravity = difficultySettings.gravity;
@@ -206,12 +217,12 @@ export default class Game {
 		this.hasShieldActive = false;
 		this.isInvulnerable = false;
 		this.isPepperActive = false;
+		this.saveDataTimer = 0;
 
 		this.bird.reset(this.width / 4, this.height / 2);
 		this.pipesManager.reset();
 		this.timeSinceLastPipe = 0;
 
-		// Apply unlocked powerups
 		const startWithShield = localStorage.getItem('shop_shield') === 'true';
 		const startWithPepper = localStorage.getItem('shop_pepper') === 'true';
 
@@ -232,6 +243,10 @@ export default class Game {
 		this.uiManager.updateVisibility(this.gameState.current);
 		this.soundManager.play('swoosh');
 		this.soundManager.pauseMusic();
+
+		if (this.ysdk) {
+			this.ysdk.stopGamePlay();
+		}
 	}
 
 	resumeGame() {
@@ -240,6 +255,10 @@ export default class Game {
 		this.uiManager.updateVisibility(this.gameState.current);
 		this.soundManager.play('swoosh');
 		this.soundManager.playMusic();
+
+		if (this.ysdk) {
+			this.ysdk.startGamePlay();
+		}
 	}
 
 	gameLoop = delta => {
@@ -270,6 +289,14 @@ export default class Game {
 
 			this.collisionManager.checkCollisions();
 			this.checkScore();
+
+			if (this.ysdk && this.ysdk.isAuthorized()) {
+				this.saveDataTimer += delta;
+				if (this.saveDataTimer >= this.saveDataInterval) {
+					this.ysdk.savePlayerData();
+					this.saveDataTimer = 0;
+				}
+			}
 		} else if (this.gameState.current === 'FALLING') {
 			this.bird.update(delta, this.gravity * 1.5);
 
@@ -304,6 +331,10 @@ export default class Game {
 		this.uiManager.updateCoins(this.coins);
 
 		localStorage.setItem('coins', this.coins);
+
+		if (this.ysdk && this.ysdk.isAuthorized()) {
+			this.saveDataTimer = this.saveDataInterval - 30;
+		}
 	}
 
 	collectShield() {
@@ -340,6 +371,10 @@ export default class Game {
 		this.soundManager.play('hit');
 		this.soundManager.pauseMusic();
 
+		if (this.ysdk) {
+			this.ysdk.stopGamePlay();
+		}
+
 		this.gameState.transitionTo('FALLING');
 
 		this.pipesManager.speed = 0;
@@ -356,6 +391,14 @@ export default class Game {
 		if (this.score > this.bestScore) {
 			this.bestScore = this.score;
 			localStorage.setItem('bestScore', this.bestScore);
+
+			if (this.ysdk) {
+				this.ysdk.setLeaderboardScore(this.score);
+			}
+		}
+
+		if (this.ysdk && this.ysdk.isAuthorized()) {
+			this.ysdk.savePlayerData();
 		}
 
 		this.uiManager.prepareGameOverScreen(this.score, this.bestScore, this.coinsCollectedThisRound);
@@ -363,6 +406,12 @@ export default class Game {
 		this.gameState.transitionTo('GAMEOVER');
 
 		this.soundManager.play('swoosh');
+
+		if (this.ysdk) {
+			setTimeout(() => {
+				this.ysdk.showInterstitialAd();
+			}, 1000);
+		}
 	}
 
 	restartGame() {
@@ -382,6 +431,10 @@ export default class Game {
 		this.score = 0;
 		this.hasShieldActive = false;
 
+		if (this.ysdk) {
+			this.ysdk.showBanner(true);
+		}
+
 		setTimeout(() => {
 			this.soundManager.playMusic();
 		}, 500);
@@ -390,12 +443,54 @@ export default class Game {
 	openShop() {
 		this.soundManager.play('swoosh');
 		this.uiManager.openShop();
+		this.gameState.transitionTo('SHOP');
 	}
 
 	closeShop() {
 		this.gameState.transitionTo('MENU');
 		this.uiManager.updateVisibility(this.gameState.current);
 		this.soundManager.play('swoosh');
+	}
+
+	openLeaderboard() {
+		if (!this.ysdk || !this.ysdk.initialized) {
+			this.soundManager.play('hit');
+			return;
+		}
+
+		this.soundManager.play('swoosh');
+		this.gameState.transitionTo('LEADERBOARD');
+		this.uiManager.openLeaderboard();
+
+		this.ysdk.getLeaderboardEntries().then(entries => {
+			if (entries) {
+				this.uiManager.updateLeaderboardEntries(entries);
+			}
+		});
+	}
+
+	closeLeaderboard() {
+		this.gameState.transitionTo('MENU');
+		this.uiManager.updateVisibility(this.gameState.current);
+		this.soundManager.play('swoosh');
+	}
+
+	authorizePlayer() {
+		if (!this.ysdk || !this.ysdk.initialized) {
+			this.soundManager.play('hit');
+			return;
+		}
+
+		this.ysdk.authorizePlayer().then(success => {
+			if (success) {
+				this.soundManager.play('point');
+				if (this.gameState.current === 'LEADERBOARD') {
+					this.openLeaderboard();
+				}
+			} else {
+				this.soundManager.play('hit');
+			}
+		});
 	}
 
 	handleResize() {

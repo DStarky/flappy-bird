@@ -3,6 +3,7 @@ import MenuScreen from './MenuScreen';
 import PauseScreen from './PauseScreen';
 import GameOverScreen from './GameOverScreen';
 import ShopScreen from './ShopScreen';
+import LeaderboardScreen from './LeaderboardScreen';
 
 import coinImg from '../../assets/MonedaD.png';
 
@@ -17,12 +18,14 @@ export default class UIManager {
 		this.pauseContainer = new PIXI.Container();
 		this.gameOverContainer = new PIXI.Container();
 		this.shopContainer = new PIXI.Container();
+		this.leaderboardContainer = new PIXI.Container();
 
 		this.menuContainer.visible = false;
 		this.gameHUD.visible = false;
 		this.pauseContainer.visible = false;
 		this.gameOverContainer.visible = false;
 		this.shopContainer.visible = false;
+		this.leaderboardContainer.visible = false;
 
 		this.menuScreen = new MenuScreen(width, height, game);
 		this.menuContainer.addChild(this.menuScreen.container);
@@ -35,6 +38,9 @@ export default class UIManager {
 
 		this.shopScreen = new ShopScreen(width, height, game);
 		this.shopContainer.addChild(this.shopScreen.container);
+
+		this.leaderboardScreen = new LeaderboardScreen(width, height, game);
+		this.leaderboardContainer.addChild(this.leaderboardScreen.container);
 
 		this._setupGameHUD();
 
@@ -105,6 +111,7 @@ export default class UIManager {
 		this.gameHUD.visible = state === 'PLAY' || state === 'FALLING';
 		this.pauseContainer.visible = state === 'PAUSE';
 		this.shopContainer.visible = state === 'SHOP';
+		this.leaderboardContainer.visible = state === 'LEADERBOARD';
 
 		if (state !== 'GAMEOVER' && state !== 'FALLING') {
 			this.gameOverContainer.visible = false;
@@ -133,7 +140,9 @@ export default class UIManager {
 		this.menuScreen.updateSelectedDifficulty(difficulty);
 	}
 
-	updateShieldStatus(isActive) {}
+	updateShieldStatus(isActive) {
+		// Реализация обновления статуса щита
+	}
 
 	prepareGameOverScreen(score, bestScore, coinsCollected = 0) {
 		this.gameOverScreen.prepare(score, bestScore, coinsCollected);
@@ -145,7 +154,15 @@ export default class UIManager {
 
 	openShop() {
 		this.shopScreen.open();
-		this.game.gameState.transitionTo('SHOP');
 		this.updateVisibility('SHOP');
+	}
+
+	openLeaderboard() {
+		this.leaderboardScreen.open();
+		this.updateVisibility('LEADERBOARD');
+	}
+
+	updateLeaderboardEntries(entries) {
+		this.leaderboardScreen.updateEntries(entries);
 	}
 }

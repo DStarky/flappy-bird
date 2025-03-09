@@ -1,4 +1,5 @@
 import Game from './js/Game';
+import YandexGamesSDK from './js/YandexGamesSDK';
 
 function preloadFont(fontFamily) {
 	return new Promise(resolve => {
@@ -24,12 +25,28 @@ function preloadFont(fontFamily) {
 	});
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
+async function initGame() {
 	await preloadFont('HarreeghPoppedCyrillic');
 
 	const gameWidth = 480;
 	const gameHeight = 640;
 
 	const game = new Game(gameWidth, gameHeight);
+
+	const ysdk = new YandexGamesSDK(game);
+	game.ysdk = ysdk;
+
+	await ysdk.init();
+
+	document.addEventListener('visibilitychange', () => {
+		if (document.hidden) {
+			if (game.gameState.current === 'PLAY') {
+				game.pauseGame();
+			}
+		}
+	});
+
 	game.handleResize();
-});
+}
+
+window.addEventListener('DOMContentLoaded', initGame);

@@ -49,13 +49,15 @@ export default class MenuScreen {
 		});
 		this.difficultyText.anchor.set(0.5);
 		this.difficultyContainer.addChild(this.difficultyText);
-		const buttonWidth = 80;
-		const buttonSpacing = 10;
-		const totalWidth = buttonWidth * 3 + buttonSpacing * 2;
+
+		const diffButtonWidth = 80;
+		const diffButtonSpacing = 10;
+		const totalWidth = diffButtonWidth * 3 + diffButtonSpacing * 2;
 		const startX = -totalWidth / 2;
+
 		this.easyButton = new PIXI.Graphics();
 		this.easyButton.beginFill(0x27ae60);
-		this.easyButton.drawRoundedRect(0, 0, buttonWidth, 40, 8);
+		this.easyButton.drawRoundedRect(0, 0, diffButtonWidth, 40, 8);
 		this.easyButton.endFill();
 		this.easyButton.x = startX;
 		this.easyButton.y = 30;
@@ -71,14 +73,14 @@ export default class MenuScreen {
 			fill: 0xffffff,
 		});
 		easyText.anchor.set(0.5);
-		easyText.x = buttonWidth / 2;
+		easyText.x = diffButtonWidth / 2;
 		easyText.y = 20;
 		this.easyButton.addChild(easyText);
 		this.mediumButton = new PIXI.Graphics();
 		this.mediumButton.beginFill(0xf39c12);
-		this.mediumButton.drawRoundedRect(0, 0, buttonWidth, 40, 8);
+		this.mediumButton.drawRoundedRect(0, 0, diffButtonWidth, 40, 8);
 		this.mediumButton.endFill();
-		this.mediumButton.x = startX + buttonWidth + buttonSpacing;
+		this.mediumButton.x = startX + diffButtonWidth + diffButtonSpacing;
 		this.mediumButton.y = 30;
 		this.mediumButton.interactive = true;
 		this.mediumButton.cursor = 'pointer';
@@ -97,14 +99,14 @@ export default class MenuScreen {
 			fill: 0xffffff,
 		});
 		mediumText.anchor.set(0.5);
-		mediumText.x = buttonWidth / 2;
+		mediumText.x = diffButtonWidth / 2;
 		mediumText.y = 20;
 		this.mediumButton.addChild(mediumText);
 		this.hardButton = new PIXI.Graphics();
 		this.hardButton.beginFill(0xe74c3c);
-		this.hardButton.drawRoundedRect(0, 0, buttonWidth, 40, 8);
+		this.hardButton.drawRoundedRect(0, 0, diffButtonWidth, 40, 8);
 		this.hardButton.endFill();
-		this.hardButton.x = startX + (buttonWidth + buttonSpacing) * 2;
+		this.hardButton.x = startX + (diffButtonWidth + diffButtonSpacing) * 2;
 		this.hardButton.y = 30;
 		this.hardButton.interactive = true;
 		this.hardButton.cursor = 'pointer';
@@ -123,47 +125,78 @@ export default class MenuScreen {
 			fill: 0xffffff,
 		});
 		hardText.anchor.set(0.5);
-		hardText.x = buttonWidth / 2;
+		hardText.x = diffButtonWidth / 2;
 		hardText.y = 20;
 		this.hardButton.addChild(hardText);
+
+		const mainButtonWidth = 200;
+		const mainButtonHeight = 60;
+		const mainButtonSpacing = 15;
+		const startY = this.height / 2 + 20;
+
 		const startButton = new PIXI.Graphics();
 		startButton.beginFill(0x4caf50);
-		startButton.drawRoundedRect(0, 0, 200, 60, 10);
+		startButton.drawRoundedRect(0, 0, mainButtonWidth, mainButtonHeight, 10);
 		startButton.endFill();
-		startButton.x = this.width / 2 - 100;
-		startButton.y = this.height / 2 + 20;
+		startButton.x = this.width / 2 - mainButtonWidth / 2;
+		startButton.y = startY;
 		startButton.interactive = true;
 		startButton.cursor = 'pointer';
 		startButton.on('pointerdown', () => this.game.startGame());
 		this.container.addChild(startButton);
+
 		const startText = new PIXI.Text('ИГРАТЬ', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 30,
 			fill: 0xffffff,
 		});
 		startText.anchor.set(0.5);
-		startText.x = 100;
-		startText.y = 30;
+		startText.x = mainButtonWidth / 2;
+		startText.y = mainButtonHeight / 2;
 		startButton.addChild(startText);
+
 		const shopButton = new PIXI.Graphics();
 		shopButton.beginFill(0x9b59b6);
-		shopButton.drawRoundedRect(0, 0, 200, 50, 10);
+		shopButton.drawRoundedRect(0, 0, mainButtonWidth, mainButtonHeight, 10);
 		shopButton.endFill();
-		shopButton.x = this.width / 2 - 100;
-		shopButton.y = this.height / 2 + 100;
+		shopButton.x = this.width / 2 - mainButtonWidth / 2;
+		shopButton.y = startY + mainButtonHeight + mainButtonSpacing;
 		shopButton.interactive = true;
 		shopButton.cursor = 'pointer';
 		shopButton.on('pointerdown', () => this.game.openShop());
 		this.container.addChild(shopButton);
+
 		const shopText = new PIXI.Text('МАГАЗИН', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
-			fontSize: 24,
+			fontSize: 30,
 			fill: 0xffffff,
 		});
 		shopText.anchor.set(0.5);
-		shopText.x = 100;
-		shopText.y = 25;
+		shopText.x = mainButtonWidth / 2;
+		shopText.y = mainButtonHeight / 2;
 		shopButton.addChild(shopText);
+
+		const leaderboardButton = new PIXI.Graphics();
+		leaderboardButton.beginFill(0x3498db);
+		leaderboardButton.drawRoundedRect(0, 0, mainButtonWidth, mainButtonHeight, 10);
+		leaderboardButton.endFill();
+		leaderboardButton.x = this.width / 2 - mainButtonWidth / 2;
+		leaderboardButton.y = startY + (mainButtonHeight + mainButtonSpacing) * 2;
+		leaderboardButton.interactive = true;
+		leaderboardButton.cursor = 'pointer';
+		leaderboardButton.on('pointerdown', () => this.game.openLeaderboard());
+		this.container.addChild(leaderboardButton);
+
+		const leaderboardText = new PIXI.Text('РЕЙТИНГ', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 30,
+			fill: 0xffffff,
+		});
+		leaderboardText.anchor.set(0.5);
+		leaderboardText.x = mainButtonWidth / 2;
+		leaderboardText.y = mainButtonHeight / 2;
+		leaderboardButton.addChild(leaderboardText);
+
 		this._createButtons();
 	}
 
