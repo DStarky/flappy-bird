@@ -96,7 +96,11 @@ export default class MenuScreen {
 		this.mediumButton.interactive = true;
 		this.mediumButton.cursor = 'pointer';
 		this.mediumButton.on('pointerdown', () => {
-			this.game.setDifficulty('medium');
+			if (this.mediumButton.interactive) {
+				this.game.setDifficulty('medium');
+			} else {
+				this.game.soundManager.play('hit');
+			}
 		});
 		this.difficultyContainer.addChild(this.mediumButton);
 
@@ -120,7 +124,11 @@ export default class MenuScreen {
 		this.hardButton.interactive = true;
 		this.hardButton.cursor = 'pointer';
 		this.hardButton.on('pointerdown', () => {
-			this.game.setDifficulty('hard');
+			if (this.hardButton.interactive) {
+				this.game.setDifficulty('hard');
+			} else {
+				this.game.soundManager.play('hit');
+			}
 		});
 		this.difficultyContainer.addChild(this.hardButton);
 
@@ -155,6 +163,28 @@ export default class MenuScreen {
 		startText.y = 30;
 		startButton.addChild(startText);
 
+		// Shop button
+		const shopButton = new PIXI.Graphics();
+		shopButton.beginFill(0x9b59b6);
+		shopButton.drawRoundedRect(0, 0, 200, 50, 10);
+		shopButton.endFill();
+		shopButton.x = this.width / 2 - 100;
+		shopButton.y = this.height / 2 + 100;
+		shopButton.interactive = true;
+		shopButton.cursor = 'pointer';
+		shopButton.on('pointerdown', () => this.game.openShop());
+		this.container.addChild(shopButton);
+
+		const shopText = new PIXI.Text('МАГАЗИН', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 24,
+			fill: 0xffffff,
+		});
+		shopText.anchor.set(0.5);
+		shopText.x = 100;
+		shopText.y = 25;
+		shopButton.addChild(shopText);
+
 		this._createButtons();
 	}
 
@@ -162,6 +192,18 @@ export default class MenuScreen {
 		this.easyButton.alpha = difficulty === 'easy' ? 1.0 : 0.6;
 		this.mediumButton.alpha = difficulty === 'medium' ? 1.0 : 0.6;
 		this.hardButton.alpha = difficulty === 'hard' ? 1.0 : 0.6;
+
+		// Check if difficulties are locked
+		const mediumUnlocked = localStorage.getItem('shop_medium_difficulty') === 'true';
+		const hardUnlocked = localStorage.getItem('shop_hard_difficulty') === 'true';
+
+		this.mediumButton.interactive = mediumUnlocked;
+		this.mediumButton.cursor = mediumUnlocked ? 'pointer' : 'not-allowed';
+		this.mediumButton.tint = mediumUnlocked ? 0xffffff : 0x888888;
+
+		this.hardButton.interactive = hardUnlocked;
+		this.hardButton.cursor = hardUnlocked ? 'pointer' : 'not-allowed';
+		this.hardButton.tint = hardUnlocked ? 0xffffff : 0x888888;
 	}
 
 	_createButtons() {
@@ -214,5 +256,36 @@ export default class MenuScreen {
 
 	updateSoundButtonIcon(isSoundOn) {
 		this.soundButton.texture = isSoundOn ? this.soundOnTexture : this.soundOffTexture;
+	}
+
+	_shakeButton(button) {
+		this.game.soundManager.play('hit');
+
+		const originalX = button.x;
+		let time = 0;
+		const duration = 0.8;
+		const amplitude = 6;
+		const frequency = 8;
+
+		if (button._shakeTicker) {
+			this.game.app.ticker.remove(button._shakeTicker);
+		}
+
+		button._shakeTicker = delta => {
+			time += delta / 60;
+
+			if (time >= duration) {
+				this.game.app.ticker.remove(button._shakeTicker);
+				button._shakeTicker = null;
+				button.x = originalX;
+				return;
+			}
+
+			const progress = time / duration;
+			const damping = 1 - progress;
+			button.x = originalX + Math.sin(time * frequency) * amplitude * damping;
+		};
+
+		this.game.app.ticker.add(button._shakeTicker);
 	}
 }

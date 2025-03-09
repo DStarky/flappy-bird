@@ -37,6 +37,16 @@ export default class DifficultyManager {
 		};
 
 		this.currentDifficulty = localStorage.getItem('difficulty') || 'easy';
+		this.unlockedDifficulties = {
+			easy: true,
+			medium: localStorage.getItem('shop_medium_difficulty') === 'true',
+			hard: localStorage.getItem('shop_hard_difficulty') === 'true',
+		};
+
+		if (!this.unlockedDifficulties[this.currentDifficulty]) {
+			this.currentDifficulty = 'easy';
+			localStorage.setItem('difficulty', 'easy');
+		}
 	}
 
 	getDifficultySettings() {
@@ -44,13 +54,27 @@ export default class DifficultyManager {
 	}
 
 	setDifficulty(difficulty) {
-		if (this.difficulties[difficulty]) {
+		if (this.difficulties[difficulty] && this.unlockedDifficulties[difficulty]) {
 			this.currentDifficulty = difficulty;
 			localStorage.setItem('difficulty', difficulty);
+			return true;
 		}
+		return false;
 	}
 
 	getCurrentDifficultyName() {
 		return this.difficulties[this.currentDifficulty].name;
+	}
+
+	updateUnlockedDifficulties() {
+		this.unlockedDifficulties = {
+			easy: true,
+			medium: localStorage.getItem('shop_medium_difficulty') === 'true',
+			hard: localStorage.getItem('shop_hard_difficulty') === 'true',
+		};
+	}
+
+	isDifficultyUnlocked(difficulty) {
+		return this.unlockedDifficulties[difficulty];
 	}
 }

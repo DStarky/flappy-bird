@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import MenuScreen from './MenuScreen';
 import PauseScreen from './PauseScreen';
 import GameOverScreen from './GameOverScreen';
+import ShopScreen from './ShopScreen';
 
 import coinImg from '../../assets/MonedaD.png';
 
@@ -15,11 +16,13 @@ export default class UIManager {
 		this.gameHUD = new PIXI.Container();
 		this.pauseContainer = new PIXI.Container();
 		this.gameOverContainer = new PIXI.Container();
+		this.shopContainer = new PIXI.Container();
 
 		this.menuContainer.visible = false;
 		this.gameHUD.visible = false;
 		this.pauseContainer.visible = false;
 		this.gameOverContainer.visible = false;
+		this.shopContainer.visible = false;
 
 		this.menuScreen = new MenuScreen(width, height, game);
 		this.menuContainer.addChild(this.menuScreen.container);
@@ -29,6 +32,9 @@ export default class UIManager {
 
 		this.gameOverScreen = new GameOverScreen(width, height, game);
 		this.gameOverContainer.addChild(this.gameOverScreen.container);
+
+		this.shopScreen = new ShopScreen(width, height, game);
+		this.shopContainer.addChild(this.shopScreen.container);
 
 		this._setupGameHUD();
 
@@ -98,6 +104,7 @@ export default class UIManager {
 		this.menuContainer.visible = state === 'MENU';
 		this.gameHUD.visible = state === 'PLAY' || state === 'FALLING';
 		this.pauseContainer.visible = state === 'PAUSE';
+		this.shopContainer.visible = state === 'SHOP';
 
 		if (state !== 'GAMEOVER' && state !== 'FALLING') {
 			this.gameOverContainer.visible = false;
@@ -117,6 +124,9 @@ export default class UIManager {
 	updateCoins(coins) {
 		this.coinText.text = coins.toString();
 		this.menuCoinText.text = coins.toString();
+		if (this.shopScreen) {
+			this.shopScreen.updateCoins(coins);
+		}
 	}
 
 	updateDifficultyButtons(difficulty) {
@@ -131,5 +141,11 @@ export default class UIManager {
 
 	updateGameOverAnimations(delta) {
 		this.gameOverScreen.updateAnimations(delta);
+	}
+
+	openShop() {
+		this.shopScreen.open();
+		this.game.gameState.transitionTo('SHOP');
+		this.updateVisibility('SHOP');
 	}
 }

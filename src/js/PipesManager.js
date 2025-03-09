@@ -30,6 +30,9 @@ export default class PipesManager {
 		this.pepperSpawnChance = 0.12;
 		this.pipesSinceLastShield = 0;
 		this.pipesSinceLastPepper = 0;
+		
+		this.shieldUnlocked = localStorage.getItem('shop_shield') === 'true';
+		this.pepperUnlocked = localStorage.getItem('shop_pepper') === 'true';
 	}
 
 	updateGapHeight(gapHeight) {
@@ -76,7 +79,8 @@ export default class PipesManager {
 
 		const anyPowerupActive = hasActiveShields || hasActivePeppers;
 
-		if (shieldNeeded && !anyPowerupActive) {
+		// Only spawn shield if it's unlocked in the shop or player has shield active
+		if (this.shieldUnlocked && shieldNeeded && !anyPowerupActive) {
 			this.pipesSinceLastShield++;
 
 			const adjustedShieldChance = Math.min(0.5, this.shieldSpawnChance * (1 + this.pipesSinceLastShield * 0.1));
@@ -93,7 +97,8 @@ export default class PipesManager {
 			}
 		}
 
-		if (pepperNeeded && !anyPowerupActive) {
+		// Only spawn pepper if it's unlocked in the shop or player has pepper active
+		if (this.pepperUnlocked && pepperNeeded && !anyPowerupActive) {
 			this.pipesSinceLastPepper++;
 
 			const adjustedPepperChance = Math.min(0.4, this.pepperSpawnChance * (1 + this.pipesSinceLastPepper * 0.1));
@@ -263,5 +268,8 @@ export default class PipesManager {
 
 		this.pipesSinceLastShield = 0;
 		this.pipesSinceLastPepper = 0;
+		
+		this.shieldUnlocked = localStorage.getItem('shop_shield') === 'true';
+		this.pepperUnlocked = localStorage.getItem('shop_pepper') === 'true';
 	}
 }

@@ -55,6 +55,7 @@ export default class Game {
 		this.app.stage.addChild(this.uiManager.gameHUD);
 		this.app.stage.addChild(this.uiManager.pauseContainer);
 		this.app.stage.addChild(this.uiManager.gameOverContainer);
+		this.app.stage.addChild(this.uiManager.shopContainer);
 
 		this.collisionManager = new CollisionManager(this);
 
@@ -139,27 +140,42 @@ export default class Game {
 			if (e.code === 'Digit3' && this.gameState.current === 'MENU') {
 				this.setDifficulty('hard');
 			}
+			if (e.code === 'KeyM' && (this.gameState.current === 'MENU' || this.gameState.current === 'SHOP')) {
+				if (this.gameState.current === 'MENU') {
+					this.openShop();
+				} else {
+					this.closeShop();
+				}
+			}
 		});
 
 		window.addEventListener('resize', () => this.handleResize());
 	}
 
 	setDifficulty(difficulty) {
-		this.difficultyManager.setDifficulty(difficulty);
+		if (!this.difficultyManager.isDifficultyUnlocked(difficulty)) {
+			this.soundManager.play('hit');
+			// Просто воспроизводим звук ошибки без анимации движения
+			return;
+		}
 
-		const difficultySettings = this.difficultyManager.getDifficultySettings();
-		this.gravity = difficultySettings.gravity;
-		this.jumpPower = difficultySettings.jumpPower;
-		this.pipeSpeed = difficultySettings.pipeSpeed;
-		this.pipeSpawnInterval = difficultySettings.pipeSpawnInterval;
-		this.groundSpeed = difficultySettings.groundSpeed;
-		this.scoreMultiplier = difficultySettings.scoreMultiplier || 1;
-		this.coinMultiplier = difficultySettings.coinMultiplier || 1;
+		if (this.difficultyManager.setDifficulty(difficulty)) {
+			const difficultySettings = this.difficultyManager.getDifficultySettings();
+			this.gravity = difficultySettings.gravity;
+			this.jumpPower = difficultySettings.jumpPower;
+			this.pipeSpeed = difficultySettings.pipeSpeed;
+			this.pipeSpawnInterval = difficultySettings.pipeSpawnInterval;
+			this.groundSpeed = difficultySettings.groundSpeed;
+			this.scoreMultiplier = difficultySettings.scoreMultiplier || 1;
+			this.coinMultiplier = difficultySettings.coinMultiplier || 1;
 
-		this.pipesManager.updateGapHeight(difficultySettings.gapHeight);
-		this.uiManager.updateDifficultyButtons(difficulty);
+			this.pipesManager.updateGapHeight(difficultySettings.gapHeight);
+			this.uiManager.updateDifficultyButtons(difficulty);
 
-		this.soundManager.play('swoosh');
+			this.soundManager.play('swoosh');
+		} else {
+			this.soundManager.play('hit');
+		}
 	}
 
 	startGame() {
@@ -194,6 +210,18 @@ export default class Game {
 		this.bird.reset(this.width / 4, this.height / 2);
 		this.pipesManager.reset();
 		this.timeSinceLastPipe = 0;
+
+		// Apply unlocked powerups
+		const startWithShield = localStorage.getItem('shop_shield') === 'true';
+		const startWithPepper = localStorage.getItem('shop_pepper') === 'true';
+
+		if (startWithShield) {
+			this.collectShield();
+		}
+
+		if (startWithPepper) {
+			this.collectPepper();
+		}
 
 		this.app.ticker.add(this.gameLoop, this);
 	}
@@ -357,6 +385,17 @@ export default class Game {
 		setTimeout(() => {
 			this.soundManager.playMusic();
 		}, 500);
+	}
+
+	openShop() {
+		this.soundManager.play('swoosh');
+		this.uiManager.openShop();
+	}
+
+	closeShop() {
+		this.gameState.transitionTo('MENU');
+		this.uiManager.updateVisibility(this.gameState.current);
+		this.soundManager.play('swoosh');
 	}
 
 	handleResize() {

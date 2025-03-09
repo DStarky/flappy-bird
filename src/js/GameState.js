@@ -4,7 +4,7 @@ export default class GameState {
 	}
 
 	transitionTo(state) {
-		const validStates = ['MENU', 'PLAY', 'PAUSE', 'FALLING', 'GAMEOVER'];
+		const validStates = ['MENU', 'PLAY', 'PAUSE', 'FALLING', 'GAMEOVER', 'SHOP'];
 
 		if (!validStates.includes(state)) {
 			console.error(`Invalid game state: ${state}`);
