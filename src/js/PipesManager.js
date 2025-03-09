@@ -23,14 +23,23 @@ export default class PipesManager {
 
 		this.gapHeight = 150;
 
-		this.minGapY = this.screenHeight - (this.pipeHeight + this.gapHeight / 2);
-		this.maxGapY = this.pipeHeight + this.gapHeight / 2;
+		this.updateMinMaxGapY();
 
 		this.coinSpawnChance = 0.9;
 		this.shieldSpawnChance = 0.15;
 		this.pepperSpawnChance = 0.12;
 		this.pipesSinceLastShield = 0;
 		this.pipesSinceLastPepper = 0;
+	}
+
+	updateGapHeight(gapHeight) {
+		this.gapHeight = gapHeight;
+		this.updateMinMaxGapY();
+	}
+
+	updateMinMaxGapY() {
+		this.minGapY = this.screenHeight - (this.pipeHeight + this.gapHeight / 2);
+		this.maxGapY = this.pipeHeight + this.gapHeight / 2;
 	}
 
 	spawnPipe() {

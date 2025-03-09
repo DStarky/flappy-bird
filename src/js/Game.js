@@ -5,6 +5,7 @@ import UIManager from './ui/UIManager';
 import SoundManager from './SoundManager';
 import CollisionManager from './CollisionManager';
 import GameState from './GameState';
+import DifficultyManager from './DifficultyManager';
 
 import bgDay from '../assets/background-day.png';
 import base from '../assets/base.png';
@@ -16,12 +17,14 @@ export default class Game {
 
 		this.gameState = new GameState();
 		this.soundManager = new SoundManager();
+		this.difficultyManager = new DifficultyManager();
 
-		this.gravity = 0.5;
-		this.jumpPower = -8;
-		this.pipeSpeed = 3;
-		this.pipeSpawnInterval = 100;
-		this.groundSpeed = 2;
+		const difficultySettings = this.difficultyManager.getDifficultySettings();
+		this.gravity = difficultySettings.gravity;
+		this.jumpPower = difficultySettings.jumpPower;
+		this.pipeSpeed = difficultySettings.pipeSpeed;
+		this.pipeSpawnInterval = difficultySettings.pipeSpawnInterval;
+		this.groundSpeed = difficultySettings.groundSpeed;
 
 		this.score = 0;
 		this.bestScore = localStorage.getItem('bestScore') || 0;
@@ -60,6 +63,7 @@ export default class Game {
 		this.uiManager.updateVisibility(this.gameState.current);
 
 		this.uiManager.updateCoins(this.coins);
+		this.uiManager.updateDifficultyButtons(this.difficultyManager.currentDifficulty);
 
 		setTimeout(() => {
 			this.soundManager.playMusic();
@@ -111,7 +115,7 @@ export default class Game {
 					this.resumeGame();
 				}
 			}
-			if (e.code === 'KeyM' && this.gameState.current === 'MENU') {
+			if (e.code === 'KeyU' && this.gameState.current === 'MENU') {
 				const isMusicOn = this.soundManager.toggleMusic();
 				if (this.uiManager && this.uiManager.menuScreen) {
 					this.uiManager.menuScreen.updateMusicButtonIcon(isMusicOn);
@@ -123,9 +127,34 @@ export default class Game {
 					this.uiManager.menuScreen.updateSoundButtonIcon(isSoundOn);
 				}
 			}
+			if (e.code === 'Digit1' && this.gameState.current === 'MENU') {
+				this.setDifficulty('easy');
+			}
+			if (e.code === 'Digit2' && this.gameState.current === 'MENU') {
+				this.setDifficulty('medium');
+			}
+			if (e.code === 'Digit3' && this.gameState.current === 'MENU') {
+				this.setDifficulty('hard');
+			}
 		});
 
 		window.addEventListener('resize', () => this.handleResize());
+	}
+
+	setDifficulty(difficulty) {
+		this.difficultyManager.setDifficulty(difficulty);
+
+		const difficultySettings = this.difficultyManager.getDifficultySettings();
+		this.gravity = difficultySettings.gravity;
+		this.jumpPower = difficultySettings.jumpPower;
+		this.pipeSpeed = difficultySettings.pipeSpeed;
+		this.pipeSpawnInterval = difficultySettings.pipeSpawnInterval;
+		this.groundSpeed = difficultySettings.groundSpeed;
+
+		this.pipesManager.updateGapHeight(difficultySettings.gapHeight);
+		this.uiManager.updateDifficultyButtons(difficulty);
+
+		this.soundManager.play('swoosh');
 	}
 
 	startGame() {
@@ -136,6 +165,17 @@ export default class Game {
 		this.soundManager.play('swoosh');
 		this.soundManager.playMusic();
 
+		const difficultySettings = this.difficultyManager.getDifficultySettings();
+
+		this.gravity = difficultySettings.gravity;
+		this.jumpPower = difficultySettings.jumpPower;
+		this.pipeSpeed = difficultySettings.pipeSpeed;
+		this.pipeSpawnInterval = difficultySettings.pipeSpawnInterval;
+		this.groundSpeed = difficultySettings.groundSpeed;
+
+		this.pipesManager.updateGapHeight(difficultySettings.gapHeight);
+		this.pipesManager.speed = this.pipeSpeed;
+
 		this.score = 0;
 		this.uiManager.updateScore(this.score);
 
@@ -143,10 +183,6 @@ export default class Game {
 		this.hasShieldActive = false;
 		this.isInvulnerable = false;
 		this.isPepperActive = false;
-
-		this.pipeSpeed = 3;
-		this.groundSpeed = 2;
-		this.pipesManager.speed = this.pipeSpeed;
 
 		this.bird.reset(this.width / 4, this.height / 2);
 		this.pipesManager.reset();

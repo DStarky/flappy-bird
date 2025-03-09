@@ -39,15 +39,107 @@ export default class MenuScreen {
 		});
 		this.title.anchor.set(0.5);
 		this.title.x = this.width / 2;
-		this.title.y = this.height / 3;
+		this.title.y = this.height / 3 - 20;
 		this.container.addChild(this.title);
+
+		this.difficultyContainer = new PIXI.Container();
+		this.difficultyContainer.x = this.width / 2;
+		this.difficultyContainer.y = this.height / 3 + 30;
+		this.container.addChild(this.difficultyContainer);
+
+		this.difficultyText = new PIXI.Text('ВЫБЕРИТЕ СЛОЖНОСТЬ:', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 20,
+			fill: 0xffffff,
+			stroke: 0x000000,
+			strokeThickness: 2,
+		});
+		this.difficultyText.anchor.set(0.5);
+		this.difficultyContainer.addChild(this.difficultyText);
+
+		const buttonWidth = 80;
+		const buttonSpacing = 10;
+		const totalWidth = buttonWidth * 3 + buttonSpacing * 2;
+		const startX = -totalWidth / 2;
+
+		// Легкий уровень
+		this.easyButton = new PIXI.Graphics();
+		this.easyButton.beginFill(0x27ae60);
+		this.easyButton.drawRoundedRect(0, 0, buttonWidth, 40, 8);
+		this.easyButton.endFill();
+		this.easyButton.x = startX;
+		this.easyButton.y = 30;
+		this.easyButton.interactive = true;
+		this.easyButton.cursor = 'pointer';
+		this.easyButton.on('pointerdown', () => {
+			this.game.setDifficulty('easy');
+		});
+		this.difficultyContainer.addChild(this.easyButton);
+
+		const easyText = new PIXI.Text('ЛЕГКИЙ', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 14,
+			fill: 0xffffff,
+		});
+		easyText.anchor.set(0.5);
+		easyText.x = buttonWidth / 2;
+		easyText.y = 20;
+		this.easyButton.addChild(easyText);
+
+		// Средний уровень
+		this.mediumButton = new PIXI.Graphics();
+		this.mediumButton.beginFill(0xf39c12);
+		this.mediumButton.drawRoundedRect(0, 0, buttonWidth, 40, 8);
+		this.mediumButton.endFill();
+		this.mediumButton.x = startX + buttonWidth + buttonSpacing;
+		this.mediumButton.y = 30;
+		this.mediumButton.interactive = true;
+		this.mediumButton.cursor = 'pointer';
+		this.mediumButton.on('pointerdown', () => {
+			this.game.setDifficulty('medium');
+		});
+		this.difficultyContainer.addChild(this.mediumButton);
+
+		const mediumText = new PIXI.Text('СРЕДНИЙ', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 14,
+			fill: 0xffffff,
+		});
+		mediumText.anchor.set(0.5);
+		mediumText.x = buttonWidth / 2;
+		mediumText.y = 20;
+		this.mediumButton.addChild(mediumText);
+
+		// Тяжелый уровень
+		this.hardButton = new PIXI.Graphics();
+		this.hardButton.beginFill(0xe74c3c);
+		this.hardButton.drawRoundedRect(0, 0, buttonWidth, 40, 8);
+		this.hardButton.endFill();
+		this.hardButton.x = startX + (buttonWidth + buttonSpacing) * 2;
+		this.hardButton.y = 30;
+		this.hardButton.interactive = true;
+		this.hardButton.cursor = 'pointer';
+		this.hardButton.on('pointerdown', () => {
+			this.game.setDifficulty('hard');
+		});
+		this.difficultyContainer.addChild(this.hardButton);
+
+		const hardText = new PIXI.Text('ТЯЖЕЛЫЙ', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 14,
+			fill: 0xffffff,
+		});
+		hardText.anchor.set(0.5);
+		hardText.x = buttonWidth / 2;
+		hardText.y = 20;
+		this.hardButton.addChild(hardText);
 
 		const startButton = new PIXI.Graphics();
 		startButton.beginFill(0x4caf50);
 		startButton.drawRoundedRect(0, 0, 200, 60, 10);
 		startButton.endFill();
 		startButton.x = this.width / 2 - 100;
-		startButton.y = this.height / 2;
+		startButton.y = this.height / 2 + 20;
 		startButton.interactive = true;
 		startButton.cursor = 'pointer';
 		startButton.on('pointerdown', () => this.game.startGame());
@@ -64,6 +156,12 @@ export default class MenuScreen {
 		startButton.addChild(startText);
 
 		this._createButtons();
+	}
+
+	updateSelectedDifficulty(difficulty) {
+		this.easyButton.alpha = difficulty === 'easy' ? 1.0 : 0.6;
+		this.mediumButton.alpha = difficulty === 'medium' ? 1.0 : 0.6;
+		this.hardButton.alpha = difficulty === 'hard' ? 1.0 : 0.6;
 	}
 
 	_createButtons() {
