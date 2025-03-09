@@ -25,6 +25,8 @@ export default class Game {
 		this.pipeSpeed = difficultySettings.pipeSpeed;
 		this.pipeSpawnInterval = difficultySettings.pipeSpawnInterval;
 		this.groundSpeed = difficultySettings.groundSpeed;
+		this.scoreMultiplier = difficultySettings.scoreMultiplier || 1;
+		this.coinMultiplier = difficultySettings.coinMultiplier || 1;
 
 		this.score = 0;
 		this.bestScore = localStorage.getItem('bestScore') || 0;
@@ -43,6 +45,7 @@ export default class Game {
 			resolution: window.devicePixelRatio || 1,
 			autoDensity: true,
 		});
+
 		document.body.appendChild(this.app.view);
 
 		this._initializeGameWorld();
@@ -150,6 +153,8 @@ export default class Game {
 		this.pipeSpeed = difficultySettings.pipeSpeed;
 		this.pipeSpawnInterval = difficultySettings.pipeSpawnInterval;
 		this.groundSpeed = difficultySettings.groundSpeed;
+		this.scoreMultiplier = difficultySettings.scoreMultiplier || 1;
+		this.coinMultiplier = difficultySettings.coinMultiplier || 1;
 
 		this.pipesManager.updateGapHeight(difficultySettings.gapHeight);
 		this.uiManager.updateDifficultyButtons(difficulty);
@@ -172,6 +177,8 @@ export default class Game {
 		this.pipeSpeed = difficultySettings.pipeSpeed;
 		this.pipeSpawnInterval = difficultySettings.pipeSpawnInterval;
 		this.groundSpeed = difficultySettings.groundSpeed;
+		this.scoreMultiplier = difficultySettings.scoreMultiplier || 1;
+		this.coinMultiplier = difficultySettings.coinMultiplier || 1;
 
 		this.pipesManager.updateGapHeight(difficultySettings.gapHeight);
 		this.pipesManager.speed = this.pipeSpeed;
@@ -256,15 +263,15 @@ export default class Game {
 		for (let pipe of this.pipesManager.pipes) {
 			if (!pipe.passed && pipe.topPipe.x + pipe.topPipe.width / 2 < this.bird.sprite.x) {
 				pipe.passed = true;
-				this.score++;
+				this.score += this.scoreMultiplier;
 				this.uiManager.updateScore(this.score);
 			}
 		}
 	}
 
 	collectCoin() {
-		this.coins++;
-		this.coinsCollectedThisRound = (this.coinsCollectedThisRound || 0) + 1;
+		this.coins += this.coinMultiplier;
+		this.coinsCollectedThisRound = (this.coinsCollectedThisRound || 0) + this.coinMultiplier;
 
 		this.uiManager.updateCoins(this.coins);
 

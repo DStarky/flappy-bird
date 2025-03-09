@@ -9,6 +9,8 @@ export default class DifficultyManager {
 				groundSpeed: 2,
 				gapHeight: 120,
 				name: 'ЛЕГКИЙ',
+				scoreMultiplier: 1,
+				coinMultiplier: 1,
 			},
 			medium: {
 				gravity: 0.65,
@@ -18,6 +20,8 @@ export default class DifficultyManager {
 				groundSpeed: 2.5,
 				gapHeight: 112,
 				name: 'СРЕДНИЙ',
+				scoreMultiplier: 2,
+				coinMultiplier: 2,
 			},
 			hard: {
 				gravity: 0.8,
@@ -27,6 +31,8 @@ export default class DifficultyManager {
 				groundSpeed: 3,
 				gapHeight: 104,
 				name: 'ТЯЖЕЛЫЙ',
+				scoreMultiplier: 3,
+				coinMultiplier: 3,
 			},
 		};
 

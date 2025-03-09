@@ -52,7 +52,7 @@ export default class GameOverScreen {
 
 		this.collectiblesContainer = new PIXI.Container();
 		this.collectiblesContainer.x = this.width / 2;
-		this.collectiblesContainer.y = 80;
+		this.collectiblesContainer.y = 100;
 		this.scoreContainer.addChild(this.collectiblesContainer);
 
 		this.coinInfoContainer = new PIXI.Container();

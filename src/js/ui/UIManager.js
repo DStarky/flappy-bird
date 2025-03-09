@@ -92,8 +92,6 @@ export default class UIManager {
 		this.menuCoinText.x = 28;
 		this.menuCoinText.y = -4;
 		this.menuCoinContainer.addChild(this.menuCoinText);
-
-		// Удаляем индикатор сложности из игрового HUD
 	}
 
 	updateVisibility(state) {
