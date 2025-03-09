@@ -38,6 +38,73 @@
 </head>
 
 <body>
+  <script>
+    window.YandexGamesSDKEnvironment = {};
+    if (!window.YaGames) {
+      window.YaGames = {
+        init: function () {
+          console.log('Локальная имитация YaGames.init()');
+          return Promise.resolve({
+            features: {
+              LoadingAPI: {
+                ready: function () { console.log('LoadingAPI.ready()'); }
+              },
+              GameplayAPI: {
+                start: function () { console.log('GameplayAPI.start()'); },
+                stop: function () { console.log('GameplayAPI.stop()'); }
+              }
+            },
+            adv: {
+              showFullscreenAdv: function () {
+                console.log('showFullscreenAdv()');
+                return Promise.resolve();
+              },
+              showRewardedVideo: function () {
+                console.log('showRewardedVideo()');
+                return Promise.resolve();
+              },
+              showBannerAdv: function () { console.log('showBannerAdv()'); },
+              hideBannerAdv: function () { console.log('hideBannerAdv()'); }
+            },
+            getPlayer: function () {
+              console.log('getPlayer()');
+              return Promise.resolve({
+                getMode: function () { return 'lite'; },
+                getName: function () { return 'Локальный игрок'; },
+                getData: function () {
+                  console.log('Загрузка локальных данных игрока');
+                  return Promise.resolve(null);
+                },
+                setData: function (data) {
+                  console.log('Сохранение локальных данных игрока', data);
+                  return Promise.resolve();
+                }
+              });
+            },
+            getLeaderboards: function () {
+              console.log('getLeaderboards()');
+              return Promise.resolve({
+                setLeaderboardScore: function () {
+                  console.log('setLeaderboardScore()');
+                  return Promise.resolve();
+                },
+                getLeaderboardEntries: function () {
+                  console.log('getLeaderboardEntries()');
+                  return Promise.resolve({
+                    entries: [
+                      { player: { publicName: 'Игрок 1', uniqueID: '1' }, score: 100, rank: 1 },
+                      { player: { publicName: 'Игрок 2', uniqueID: '2' }, score: 80, rank: 2 },
+                      { player: { publicName: 'Игрок 3', uniqueID: '3' }, score: 60, rank: 3 }
+                    ]
+                  });
+                }
+              });
+            }
+          });
+        }
+      };
+    }
+  </script>
 </body>
 
 </html>

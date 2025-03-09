@@ -407,7 +407,7 @@ export default class Game {
 
 		this.soundManager.play('swoosh');
 
-		if (this.ysdk) {
+		if (this.ysdk && !this.ysdk.isLocalDevelopment) {
 			setTimeout(() => {
 				this.ysdk.showInterstitialAd();
 			}, 1000);
@@ -453,7 +453,7 @@ export default class Game {
 	}
 
 	openLeaderboard() {
-		if (!this.ysdk || !this.ysdk.initialized) {
+		if (!this.ysdk || (!this.ysdk.initialized && !this.ysdk.isLocalDevelopment)) {
 			this.soundManager.play('hit');
 			return;
 		}
@@ -476,7 +476,7 @@ export default class Game {
 	}
 
 	authorizePlayer() {
-		if (!this.ysdk || !this.ysdk.initialized) {
+		if (!this.ysdk || (!this.ysdk.initialized && !this.ysdk.isLocalDevelopment)) {
 			this.soundManager.play('hit');
 			return;
 		}

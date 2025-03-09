@@ -11,6 +11,7 @@ export default class YandexGamesSDK {
 		this.rewardedAdInProgress = false;
 		this.lastAdShownTime = 0;
 		this.adsMinInterval = 60000;
+		this.isLocalDevelopment = false;
 	}
 
 	async init() {
@@ -19,8 +20,10 @@ export default class YandexGamesSDK {
 		}
 
 		if (!window.YaGames) {
-			console.error('Яндекс.Игры SDK не найден. Убедитесь, что скрипт загружен.');
-			return false;
+			console.log('Яндекс.Игры SDK не найден. Использование локального режима.');
+			this.isLocalDevelopment = true;
+			this.initialized = true;
+			return true;
 		}
 
 		try {
@@ -38,6 +41,7 @@ export default class YandexGamesSDK {
 					await this.loadPlayerData();
 				}
 			} catch (err) {
+				console.log('Не удалось получить данные игрока:', err);
 				this.player = null;
 			}
 
@@ -45,8 +49,11 @@ export default class YandexGamesSDK {
 			this.initializing = false;
 			return true;
 		} catch (err) {
+			console.log('Ошибка инициализации SDK:', err);
+			this.isLocalDevelopment = true;
+			this.initialized = true;
 			this.initializing = false;
-			return false;
+			return true;
 		}
 	}
 
@@ -59,6 +66,11 @@ export default class YandexGamesSDK {
 	}
 
 	async authorizePlayer() {
+		if (this.isLocalDevelopment) {
+			console.log('Локальный режим: авторизация недоступна');
+			return false;
+		}
+
 		if (!this.sdk || this.authorizationStatus === 'AUTHORIZED' || this.authorizationStatus === 'AUTHORIZING') {
 			return false;
 		}
@@ -84,6 +96,7 @@ export default class YandexGamesSDK {
 	}
 
 	async loadPlayerData() {
+		if (this.isLocalDevelopment) return;
 		if (!this.player || this.player.getMode() === 'lite') return;
 
 		try {
@@ -114,6 +127,7 @@ export default class YandexGamesSDK {
 	}
 
 	async savePlayerData() {
+		if (this.isLocalDevelopment) return;
 		if (!this.player || this.player.getMode() === 'lite') {
 			return;
 		}
@@ -137,6 +151,7 @@ export default class YandexGamesSDK {
 	}
 
 	async setLeaderboardScore(score) {
+		if (this.isLocalDevelopment) return;
 		if (!this.sdk || !this.initialized) return;
 
 		try {
@@ -146,6 +161,16 @@ export default class YandexGamesSDK {
 	}
 
 	async getLeaderboardEntries(quantityAround = 5, quantityTop = 10) {
+		if (this.isLocalDevelopment) {
+			return {
+				entries: [
+					{ player: { publicName: 'Игрок 1', uniqueID: '1' }, score: 100, rank: 1 },
+					{ player: { publicName: 'Игрок 2', uniqueID: '2' }, score: 80, rank: 2 },
+					{ player: { publicName: 'Игрок 3', uniqueID: '3' }, score: 60, rank: 3 },
+				],
+			};
+		}
+
 		if (!this.sdk || !this.initialized) return null;
 
 		try {
@@ -162,6 +187,7 @@ export default class YandexGamesSDK {
 	}
 
 	async showInterstitialAd() {
+		if (this.isLocalDevelopment) return;
 		if (!this.sdk || !this.initialized) return;
 
 		const currentTime = Date.now();
@@ -199,6 +225,12 @@ export default class YandexGamesSDK {
 	}
 
 	async showRewardedAd(callbacks = {}) {
+		if (this.isLocalDevelopment) {
+			if (callbacks.onRewarded) callbacks.onRewarded();
+			if (callbacks.onClose) callbacks.onClose();
+			return true;
+		}
+
 		if (!this.sdk || !this.initialized || this.rewardedAdInProgress) return false;
 
 		try {
@@ -249,6 +281,7 @@ export default class YandexGamesSDK {
 	}
 
 	async showBanner(show = true) {
+		if (this.isLocalDevelopment) return;
 		if (!this.sdk || !this.initialized) return;
 
 		try {
@@ -261,6 +294,7 @@ export default class YandexGamesSDK {
 	}
 
 	startGamePlay() {
+		if (this.isLocalDevelopment) return;
 		if (!this.sdk || !this.initialized) return;
 
 		try {
@@ -269,6 +303,7 @@ export default class YandexGamesSDK {
 	}
 
 	stopGamePlay() {
+		if (this.isLocalDevelopment) return;
 		if (!this.sdk || !this.initialized) return;
 
 		try {
@@ -277,10 +312,12 @@ export default class YandexGamesSDK {
 	}
 
 	isAuthorized() {
+		if (this.isLocalDevelopment) return true;
 		return this.player && this.player.getMode() !== 'lite';
 	}
 
 	getPlayerName() {
+		if (this.isLocalDevelopment) return 'Локальный игрок';
 		if (this.player && this.player.getMode() !== 'lite') {
 			return this.player.getName() || 'Игрок';
 		}

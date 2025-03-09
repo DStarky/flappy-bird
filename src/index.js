@@ -25,8 +25,30 @@ function preloadFont(fontFamily) {
 	});
 }
 
+async function initSDK() {
+	if (window.YaGames) {
+		try {
+			await new Promise(resolve => {
+				window.YaGames.init()
+					.then(ysdk => {
+						window.ysdk = ysdk;
+						resolve();
+					})
+					.catch(() => {
+						console.log('Ошибка при инициализации SDK Яндекс.Игр');
+						resolve();
+					});
+			});
+		} catch (e) {
+			console.log('Ошибка при инициализации SDK Яндекс.Игр:', e);
+		}
+	} else {
+		console.log('SDK Яндекс.Игр не найден, запуск в локальном режиме');
+	}
+}
+
 async function initGame() {
-	await preloadFont('HarreeghPoppedCyrillic');
+	await Promise.all([preloadFont('HarreeghPoppedCyrillic'), initSDK()]);
 
 	const gameWidth = 480;
 	const gameHeight = 640;
