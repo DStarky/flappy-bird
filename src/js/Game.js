@@ -462,11 +462,17 @@ export default class Game {
 		this.gameState.transitionTo('LEADERBOARD');
 		this.uiManager.openLeaderboard();
 
-		this.ysdk.getLeaderboardEntries().then(entries => {
-			if (entries) {
-				this.uiManager.updateLeaderboardEntries(entries);
-			}
-		});
+		this.ysdk
+			.getLeaderboardEntries()
+			.then(entries => {
+				if (entries) {
+					this.uiManager.updateLeaderboardEntries(entries);
+				}
+			})
+			.catch(error => {
+				console.error('Error fetching leaderboard:', error);
+				this.uiManager.updateLeaderboardEntries({ entries: [] });
+			});
 	}
 
 	closeLeaderboard() {

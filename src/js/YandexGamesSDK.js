@@ -156,8 +156,10 @@ export default class YandexGamesSDK {
 
 		try {
 			const leaderboard = await this.sdk.getLeaderboards();
-			await leaderboard.setLeaderboardScore('flappy_bird_score', score);
-		} catch (err) {}
+			await leaderboard.setLeaderboardScore('birdScore', score);
+		} catch (err) {
+			console.error('Ошибка при установке рекорда в таблицу лидеров:', err);
+		}
 	}
 
 	async getLeaderboardEntries(quantityAround = 5, quantityTop = 10) {
@@ -175,14 +177,17 @@ export default class YandexGamesSDK {
 
 		try {
 			const leaderboard = await this.sdk.getLeaderboards();
-			const result = await leaderboard.getLeaderboardEntries('flappy_bird_score', {
+			const result = await leaderboard.getLeaderboardEntries('birdScore', {
 				quantityAround,
 				quantityTop,
 			});
 
 			return result;
 		} catch (err) {
-			return null;
+			console.error('Ошибка при получении данных таблицы лидеров:', err);
+			return {
+				entries: [],
+			};
 		}
 	}
 

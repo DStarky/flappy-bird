@@ -147,10 +147,13 @@ export default class LeaderboardScreen {
 		}
 
 		if (!entries || !entries.entries || entries.entries.length === 0) {
-			const noDataText = new PIXI.Text('Нет данных', {
+			const noDataText = new PIXI.Text('Нет данных или таблица лидеров не настроена', {
 				fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 				fontSize: 20,
 				fill: 0xffffff,
+				wordWrap: true,
+				wordWrapWidth: 400,
+				align: 'center',
 			});
 			noDataText.x = 200;
 			noDataText.anchor.set(0.5, 0);
