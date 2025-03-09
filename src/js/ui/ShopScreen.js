@@ -24,8 +24,8 @@ export default class ShopScreen {
 				price: 3000,
 				unlocked: false,
 			},
-			{ id: 'shield', name: 'ЩИТ', description: 'Начинать игру с дополнительным щитом', price: 10000, unlocked: false },
-			{ id: 'pepper', name: 'УСКОРЕНИЕ', description: 'Начинать игру с ускорением', price: 20000, unlocked: false },
+			{ id: 'shield', name: 'ЩИТ', description: 'Добавляет в игру щит', price: 10000, unlocked: false },
+			{ id: 'pepper', name: 'УСКОРЕНИЕ', description: 'Добавляет в игру ускорение', price: 20000, unlocked: false },
 		];
 		this._setupShopElements();
 		this._loadUnlockedItems();
