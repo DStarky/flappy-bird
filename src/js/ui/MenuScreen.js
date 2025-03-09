@@ -1,5 +1,4 @@
 import * as PIXI from 'pixi.js';
-
 import menuBg from '../../assets/background-day.png';
 import base from '../../assets/base.png';
 import musicOnImg from '../../assets/ui/music-on.png';
@@ -12,9 +11,7 @@ export default class MenuScreen {
 		this.width = width;
 		this.height = height;
 		this.game = game;
-
 		this.container = new PIXI.Container();
-
 		this._setupMenuElements();
 	}
 
@@ -23,13 +20,11 @@ export default class MenuScreen {
 		menuBackground.width = this.width;
 		menuBackground.height = this.height;
 		this.container.addChild(menuBackground);
-
 		const groundTexture = PIXI.Texture.from(base);
 		this.groundSprite = new PIXI.TilingSprite(groundTexture, this.width, 112);
 		this.groundSprite.x = 0;
 		this.groundSprite.y = this.height - 112;
 		this.container.addChild(this.groundSprite);
-
 		this.title = new PIXI.Text('FLAPPY BIRD', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 40,
@@ -41,12 +36,10 @@ export default class MenuScreen {
 		this.title.x = this.width / 2;
 		this.title.y = this.height / 3 - 20;
 		this.container.addChild(this.title);
-
 		this.difficultyContainer = new PIXI.Container();
 		this.difficultyContainer.x = this.width / 2;
 		this.difficultyContainer.y = this.height / 3 + 30;
 		this.container.addChild(this.difficultyContainer);
-
 		this.difficultyText = new PIXI.Text('ВЫБЕРИТЕ СЛОЖНОСТЬ:', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 20,
@@ -56,13 +49,10 @@ export default class MenuScreen {
 		});
 		this.difficultyText.anchor.set(0.5);
 		this.difficultyContainer.addChild(this.difficultyText);
-
 		const buttonWidth = 80;
 		const buttonSpacing = 10;
 		const totalWidth = buttonWidth * 3 + buttonSpacing * 2;
 		const startX = -totalWidth / 2;
-
-		// Легкий уровень
 		this.easyButton = new PIXI.Graphics();
 		this.easyButton.beginFill(0x27ae60);
 		this.easyButton.drawRoundedRect(0, 0, buttonWidth, 40, 8);
@@ -75,7 +65,6 @@ export default class MenuScreen {
 			this.game.setDifficulty('easy');
 		});
 		this.difficultyContainer.addChild(this.easyButton);
-
 		const easyText = new PIXI.Text('ЛЕГКИЙ', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 14,
@@ -85,8 +74,6 @@ export default class MenuScreen {
 		easyText.x = buttonWidth / 2;
 		easyText.y = 20;
 		this.easyButton.addChild(easyText);
-
-		// Средний уровень
 		this.mediumButton = new PIXI.Graphics();
 		this.mediumButton.beginFill(0xf39c12);
 		this.mediumButton.drawRoundedRect(0, 0, buttonWidth, 40, 8);
@@ -96,14 +83,14 @@ export default class MenuScreen {
 		this.mediumButton.interactive = true;
 		this.mediumButton.cursor = 'pointer';
 		this.mediumButton.on('pointerdown', () => {
-			if (this.mediumButton.interactive) {
+			const mediumUnlocked = localStorage.getItem('shop_medium_difficulty') === 'true';
+			if (mediumUnlocked) {
 				this.game.setDifficulty('medium');
 			} else {
-				this.game.soundManager.play('hit');
+				this._shakeButton(this.mediumButton);
 			}
 		});
 		this.difficultyContainer.addChild(this.mediumButton);
-
 		const mediumText = new PIXI.Text('СРЕДНИЙ', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 14,
@@ -113,8 +100,6 @@ export default class MenuScreen {
 		mediumText.x = buttonWidth / 2;
 		mediumText.y = 20;
 		this.mediumButton.addChild(mediumText);
-
-		// Тяжелый уровень
 		this.hardButton = new PIXI.Graphics();
 		this.hardButton.beginFill(0xe74c3c);
 		this.hardButton.drawRoundedRect(0, 0, buttonWidth, 40, 8);
@@ -124,14 +109,14 @@ export default class MenuScreen {
 		this.hardButton.interactive = true;
 		this.hardButton.cursor = 'pointer';
 		this.hardButton.on('pointerdown', () => {
-			if (this.hardButton.interactive) {
+			const hardUnlocked = localStorage.getItem('shop_hard_difficulty') === 'true';
+			if (hardUnlocked) {
 				this.game.setDifficulty('hard');
 			} else {
-				this.game.soundManager.play('hit');
+				this._shakeButton(this.hardButton);
 			}
 		});
 		this.difficultyContainer.addChild(this.hardButton);
-
 		const hardText = new PIXI.Text('ТЯЖЕЛЫЙ', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 14,
@@ -141,7 +126,6 @@ export default class MenuScreen {
 		hardText.x = buttonWidth / 2;
 		hardText.y = 20;
 		this.hardButton.addChild(hardText);
-
 		const startButton = new PIXI.Graphics();
 		startButton.beginFill(0x4caf50);
 		startButton.drawRoundedRect(0, 0, 200, 60, 10);
@@ -152,7 +136,6 @@ export default class MenuScreen {
 		startButton.cursor = 'pointer';
 		startButton.on('pointerdown', () => this.game.startGame());
 		this.container.addChild(startButton);
-
 		const startText = new PIXI.Text('ИГРАТЬ', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 30,
@@ -162,8 +145,6 @@ export default class MenuScreen {
 		startText.x = 100;
 		startText.y = 30;
 		startButton.addChild(startText);
-
-		// Shop button
 		const shopButton = new PIXI.Graphics();
 		shopButton.beginFill(0x9b59b6);
 		shopButton.drawRoundedRect(0, 0, 200, 50, 10);
@@ -174,7 +155,6 @@ export default class MenuScreen {
 		shopButton.cursor = 'pointer';
 		shopButton.on('pointerdown', () => this.game.openShop());
 		this.container.addChild(shopButton);
-
 		const shopText = new PIXI.Text('МАГАЗИН', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 24,
@@ -184,7 +164,6 @@ export default class MenuScreen {
 		shopText.x = 100;
 		shopText.y = 25;
 		shopButton.addChild(shopText);
-
 		this._createButtons();
 	}
 
@@ -192,18 +171,14 @@ export default class MenuScreen {
 		this.easyButton.alpha = difficulty === 'easy' ? 1.0 : 0.6;
 		this.mediumButton.alpha = difficulty === 'medium' ? 1.0 : 0.6;
 		this.hardButton.alpha = difficulty === 'hard' ? 1.0 : 0.6;
-
-		// Check if difficulties are locked
 		const mediumUnlocked = localStorage.getItem('shop_medium_difficulty') === 'true';
 		const hardUnlocked = localStorage.getItem('shop_hard_difficulty') === 'true';
-
-		this.mediumButton.interactive = mediumUnlocked;
 		this.mediumButton.cursor = mediumUnlocked ? 'pointer' : 'not-allowed';
 		this.mediumButton.tint = mediumUnlocked ? 0xffffff : 0x888888;
-
-		this.hardButton.interactive = hardUnlocked;
+		this.mediumButton.alpha = mediumUnlocked ? this.mediumButton.alpha : 0.5;
 		this.hardButton.cursor = hardUnlocked ? 'pointer' : 'not-allowed';
 		this.hardButton.tint = hardUnlocked ? 0xffffff : 0x888888;
+		this.hardButton.alpha = hardUnlocked ? this.hardButton.alpha : 0.5;
 	}
 
 	_createButtons() {
@@ -211,41 +186,34 @@ export default class MenuScreen {
 		this.musicButtonContainer.x = this.width - 50;
 		this.musicButtonContainer.y = 40;
 		this.container.addChild(this.musicButtonContainer);
-
 		this.soundButtonContainer = new PIXI.Container();
 		this.soundButtonContainer.x = this.width - 50;
 		this.soundButtonContainer.y = 110;
 		this.container.addChild(this.soundButtonContainer);
-
 		this.musicOnTexture = PIXI.Texture.from(musicOnImg);
 		this.musicOffTexture = PIXI.Texture.from(musicOffImg);
 		this.soundOnTexture = PIXI.Texture.from(soundsOnImg);
 		this.soundOffTexture = PIXI.Texture.from(soundsOffImg);
-
 		this.musicButton = new PIXI.Sprite(this.musicOnTexture);
 		this.musicButton.anchor.set(0.5);
 		this.musicButton.scale.set(2.0);
 		this.musicButtonContainer.addChild(this.musicButton);
-
 		this.soundButton = new PIXI.Sprite(this.soundOnTexture);
 		this.soundButton.anchor.set(0.5);
 		this.soundButton.scale.set(2.0);
 		this.soundButtonContainer.addChild(this.soundButton);
-
 		this.musicButton.interactive = true;
 		this.musicButton.cursor = 'pointer';
 		this.musicButton.on('pointerdown', () => {
 			const isMusicOn = this.game.soundManager.toggleMusic();
 			this.updateMusicButtonIcon(isMusicOn);
 		});
-
 		this.soundButton.interactive = true;
 		this.soundButton.cursor = 'pointer';
 		this.soundButton.on('pointerdown', () => {
 			const isSoundOn = this.game.soundManager.toggleSound();
 			this.updateSoundButtonIcon(isSoundOn);
 		});
-
 		this.updateMusicButtonIcon(this.game.soundManager.isMusicOn());
 		this.updateSoundButtonIcon(this.game.soundManager.isSoundOn());
 	}
@@ -259,33 +227,26 @@ export default class MenuScreen {
 	}
 
 	_shakeButton(button) {
+		if (button._shakeTicker) return;
 		this.game.soundManager.play('hit');
-
 		const originalX = button.x;
 		let time = 0;
 		const duration = 0.8;
 		const amplitude = 6;
 		const frequency = 8;
-
-		if (button._shakeTicker) {
-			this.game.app.ticker.remove(button._shakeTicker);
-		}
-
+		const ticker = this.game.app && this.game.app.ticker ? this.game.app.ticker : PIXI.Ticker.shared;
 		button._shakeTicker = delta => {
 			time += delta / 60;
-
 			if (time >= duration) {
-				this.game.app.ticker.remove(button._shakeTicker);
+				ticker.remove(button._shakeTicker);
 				button._shakeTicker = null;
 				button.x = originalX;
 				return;
 			}
-
 			const progress = time / duration;
 			const damping = 1 - progress;
 			button.x = originalX + Math.sin(time * frequency) * amplitude * damping;
 		};
-
-		this.game.app.ticker.add(button._shakeTicker);
+		ticker.add(button._shakeTicker);
 	}
 }
