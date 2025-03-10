@@ -175,7 +175,13 @@ export default class LeaderboardScreen {
 		const entryHeight = 40;
 
 		entries.entries.forEach((entry, index) => {
-			const isCurrentPlayer = isAuthorized && entry.player.uniqueID === entries.userRank?.player.uniqueID;
+			const isCurrentPlayer =
+				isAuthorized &&
+				entry.player &&
+				entry.player.uniqueID &&
+				entries.userRank?.player &&
+				entries.userRank.player.uniqueID &&
+				entry.player.uniqueID === entries.userRank.player.uniqueID;
 
 			const entryContainer = this._createEntryRow(entry, index + 1, isCurrentPlayer);
 			entryContainer.y = entryY;
@@ -184,7 +190,13 @@ export default class LeaderboardScreen {
 			entryY += entryHeight;
 		});
 
-		if (isAuthorized && playerRank && !entries.entries.find(e => e.player.uniqueID === playerRank.player.uniqueID)) {
+		if (
+			isAuthorized &&
+			playerRank &&
+			playerRank.player &&
+			playerRank.player.uniqueID &&
+			!entries.entries.find(e => e.player && e.player.uniqueID === playerRank.player.uniqueID)
+		) {
 			const separator = new PIXI.Graphics();
 			separator.beginFill(0xffffff, 0.3);
 			separator.drawRect(0, 0, 400, 2);
@@ -220,7 +232,7 @@ export default class LeaderboardScreen {
 		rankText.y = 10;
 		container.addChild(rankText);
 
-		let playerName = entry.player.publicName || 'Гость';
+		let playerName = entry.player && entry.player.publicName ? entry.player.publicName : 'Гость';
 		if (playerName.length > 20) {
 			playerName = playerName.substring(0, 17) + '...';
 		}
