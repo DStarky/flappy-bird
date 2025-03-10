@@ -29,7 +29,7 @@ import backgroundMusic from './assets/music/music.mp3';
 function preloadFont(fontFamily) {
 	return new Promise(resolve => {
 		const testElement = document.createElement('span');
-		testElement.innerHTML = 'FLAPPY BIRD';
+		testElement.innerHTML = 'Прыг-скок птичка';
 		testElement.style.fontFamily = `${fontFamily}, Arial`;
 		testElement.style.fontSize = '0px';
 		testElement.style.position = 'absolute';

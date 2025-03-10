@@ -4,37 +4,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Flappy Bird - PixiJS</title>
+  <title>Прыг-скок птичка</title>
   <style>
     * {
       margin: 0;
       padding: 0;
     }
 
- body {
-    margin: 0;
-    padding: 0;
-    background-color: #222;
-    font-family: 'Arial', sans-serif;
-    overflow: hidden;
-    position: relative;
-  }
-  
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url('./assets/bg.jpg');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.25;
-    filter: blur(3px);
-    z-index: -1;
-    transform: scale(1.1);
-  }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #222;
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('./assets/bg.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.25;
+      filter: blur(3px);
+      z-index: -1;
+      transform: scale(1.1);
+    }
 
     canvas {
       display: block;

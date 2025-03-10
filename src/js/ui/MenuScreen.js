@@ -25,7 +25,7 @@ export default class MenuScreen {
 		this.groundSprite.x = 0;
 		this.groundSprite.y = this.height - 112;
 		this.container.addChild(this.groundSprite);
-		this.title = new PIXI.Text('FLAPPY BIRD', {
+		this.title = new PIXI.Text('ПРЫГ-СКОК ПТИЧКА', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 40,
 			fill: 0xffffff,
