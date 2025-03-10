@@ -140,12 +140,10 @@ export default class UIManager {
 		this.menuScreen.updateSelectedDifficulty(difficulty);
 	}
 
-	updateShieldStatus(isActive) {
-		// Реализация обновления статуса щита
-	}
+	updateShieldStatus(isActive) {}
 
-	prepareGameOverScreen(score, bestScore, coinsCollected = 0) {
-		this.gameOverScreen.prepare(score, bestScore, coinsCollected);
+	prepareGameOverScreen(score, bestScore, coinsCollected = 0, canContinue = true) {
+		this.gameOverScreen.prepare(score, bestScore, coinsCollected, canContinue);
 	}
 
 	updateGameOverAnimations(delta) {

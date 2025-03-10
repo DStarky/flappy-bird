@@ -52,7 +52,7 @@ export default class GameOverScreen {
 
 		this.collectiblesContainer = new PIXI.Container();
 		this.collectiblesContainer.x = this.width / 2;
-		this.collectiblesContainer.y = 100;
+		this.collectiblesContainer.y = 65;
 		this.scoreContainer.addChild(this.collectiblesContainer);
 
 		this.coinInfoContainer = new PIXI.Container();
@@ -101,6 +101,28 @@ export default class GameOverScreen {
 
 		this.scoreContainer.y = this.height + 200;
 
+		this.continueButton = new PIXI.Graphics();
+		this.continueButton.beginFill(0xf39c12);
+		this.continueButton.drawRoundedRect(0, 0, 200, 60, 10);
+		this.continueButton.endFill();
+		this.continueButton.x = this.width / 2 - 100;
+		this.continueButton.y = this.height / 2 + 40;
+		this.continueButton.interactive = true;
+		this.continueButton.cursor = 'pointer';
+		this.continueButton.on('pointerdown', () => this.game.showAdToContinue());
+		this.container.addChild(this.continueButton);
+
+		const continueText = new PIXI.Text('ПРОДОЛЖИТЬ\nЗА РЕКЛАМУ', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 20,
+			fill: 0xffffff,
+			align: 'center',
+		});
+		continueText.anchor.set(0.5);
+		continueText.x = 100;
+		continueText.y = 30;
+		this.continueButton.addChild(continueText);
+
 		this.restartButton = new PIXI.Graphics();
 		this.restartButton.beginFill(0x4caf50);
 		this.restartButton.drawRoundedRect(0, 0, 200, 60, 10);
@@ -122,10 +144,11 @@ export default class GameOverScreen {
 		restartText.y = 30;
 		this.restartButton.addChild(restartText);
 
+		this.continueButton.visible = false;
 		this.restartButton.visible = false;
 	}
 
-	prepare(score, bestScore, coinsCollected = 0) {
+	prepare(score, bestScore, coinsCollected = 0, canContinue = true) {
 		this.finalScoreText.text = `Счёт: ${score}\nРекорд: ${bestScore}`;
 
 		this.coinsCollectedText.text = `+${coinsCollected}`;
@@ -135,7 +158,11 @@ export default class GameOverScreen {
 
 		this.gameOverImageContainer.y = this.height + 100;
 		this.scoreContainer.y = this.height + 200;
-		this.restartButton.visible = false;
+
+		this.continueButton.y = this.height + 300;
+		this.restartButton.y = this.height + 380;
+		this.continueButton.visible = canContinue;
+		this.restartButton.visible = true;
 
 		this._animationSoundPlayed = false;
 
@@ -143,23 +170,40 @@ export default class GameOverScreen {
 	}
 
 	updateAnimations(delta) {
-		if (this.gameOverImageContainer.y > this.height / 2 - 100) {
+		if (this.gameOverImageContainer.y > this.height / 2 - 150) {
 			this.gameOverImageContainer.y -= 20 * delta;
-			if (this.gameOverImageContainer.y <= this.height / 2 - 100) {
-				this.gameOverImageContainer.y = this.height / 2 - 100;
+			if (this.gameOverImageContainer.y <= this.height / 2 - 150) {
+				this.gameOverImageContainer.y = this.height / 2 - 150;
 			}
 		}
 
-		if (this.gameOverImageContainer.y <= this.height / 2 - 100 && this.scoreContainer.y > this.height / 2) {
+		if (this.gameOverImageContainer.y <= this.height / 2 - 150 && this.scoreContainer.y > this.height / 2 - 50) {
 			this.scoreContainer.y -= 20 * delta;
 
-			if (this.scoreContainer.y <= this.height / 2) {
-				this.scoreContainer.y = this.height / 2;
-				this.restartButton.visible = true;
+			if (this.scoreContainer.y <= this.height / 2 - 50) {
+				this.scoreContainer.y = this.height / 2 - 50;
+			}
+		}
 
-				if (!this._animationSoundPlayed) {
-					this.game.soundManager.play('swoosh');
-					this._animationSoundPlayed = true;
+		if (this.scoreContainer.y <= this.height / 2 - 50 && this.continueButton.visible) {
+			if (this.continueButton.y > this.height / 2 + 40) {
+				this.continueButton.y -= 20 * delta;
+				if (this.continueButton.y <= this.height / 2 + 40) {
+					this.continueButton.y = this.height / 2 + 40;
+				}
+			}
+		}
+
+		if (this.scoreContainer.y <= this.height / 2 - 50) {
+			if (this.restartButton.y > this.height / 2 + 120) {
+				this.restartButton.y -= 20 * delta;
+				if (this.restartButton.y <= this.height / 2 + 120) {
+					this.restartButton.y = this.height / 2 + 120;
+
+					if (!this._animationSoundPlayed) {
+						this.game.soundManager.play('swoosh');
+						this._animationSoundPlayed = true;
+					}
 				}
 			}
 		}

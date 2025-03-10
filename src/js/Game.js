@@ -36,6 +36,7 @@ export default class Game {
 		this.hasShieldActive = false;
 		this.isInvulnerable = false;
 		this.isPepperActive = false;
+		this.continuedWithAd = false;
 
 		this.timeSinceLastPipe = 0;
 		this.saveDataTimer = 0;
@@ -191,6 +192,8 @@ export default class Game {
 		this.uiManager.updateVisibility(this.gameState.current);
 		this.soundManager.play('swoosh');
 		this.soundManager.playMusic();
+
+		this.continuedWithAd = false;
 
 		if (this.ysdk) {
 			this.ysdk.startGamePlay();
@@ -401,7 +404,12 @@ export default class Game {
 			this.ysdk.savePlayerData();
 		}
 
-		this.uiManager.prepareGameOverScreen(this.score, this.bestScore, this.coinsCollectedThisRound);
+		this.uiManager.prepareGameOverScreen(
+			this.score,
+			this.bestScore,
+			this.coinsCollectedThisRound,
+			!this.continuedWithAd,
+		);
 
 		this.gameState.transitionTo('GAMEOVER');
 
@@ -508,5 +516,55 @@ export default class Game {
 		this.app.view.style.position = 'absolute';
 		this.app.view.style.left = `${(windowWidth - this.width * scale) / 2}px`;
 		this.app.view.style.top = `${(windowHeight - this.height * scale) / 2}px`;
+	}
+
+	continueAfterAd() {
+		if (this.gameState.current !== 'GAMEOVER') return;
+
+		this.continuedWithAd = true;
+		this.gameState.transitionTo('PLAY');
+		this.uiManager.updateVisibility(this.gameState.current);
+		this.soundManager.play('swoosh');
+		this.soundManager.playMusic();
+
+		if (this.ysdk) {
+			this.ysdk.startGamePlay();
+		}
+
+		this.pipesManager.speed = this.pipeSpeed;
+		this.groundSpeed = this.difficultyManager.getDifficultySettings().groundSpeed;
+
+		const safeY = this.height / 2;
+		this.bird.sprite.y = safeY;
+		this.bird.sprite.rotation = 0;
+		this.bird.vy = 0;
+
+		this.bird.activateShield(180);
+		this.hasShieldActive = true;
+		this.isInvulnerable = true;
+
+		this.gameOverContainer.visible = false;
+		this.uiManager.gameOverUIContainer.visible = false;
+
+		this.app.ticker.add(this.gameLoop, this);
+	}
+
+	showAdToContinue() {
+		if (!this.ysdk || this.continuedWithAd) return;
+
+		this.soundManager.play('swoosh');
+
+		this.ysdk.showRewardedAd({
+			onRewarded: () => {
+				this.continueAfterAd();
+			},
+			onClose: () => {
+				console.log('Ad closed');
+			},
+			onError: error => {
+				console.error('Ad error:', error);
+				this.soundManager.play('hit');
+			},
+		});
 	}
 }
