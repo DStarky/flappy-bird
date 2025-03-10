@@ -10,10 +10,13 @@ export default class CollisionManager {
 		if (this.game.bird.sprite.y + this.game.bird.sprite.height / 2 > groundY) {
 			this.game.bird.sprite.y = groundY - this.game.bird.sprite.height / 2;
 
-			if (!this.game.bird.hasActiveShield() && !this.game.bird.isInvulnerable()) {
+			if (this.game.bird.hasActiveShield() || this.game.bird.isInvulnerable()) {
+				this.game.bird.absorbHit();
+				this.game.bird.vy = -Math.abs(this.game.bird.vy) * 0.5;
+			} else {
 				this.game.gameOver();
-				return;
 			}
+			return;
 		}
 
 		if (this.game.isInvulnerable && !this.game.bird.hasActiveShield()) {
