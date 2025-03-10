@@ -226,16 +226,11 @@ export default class Game {
 		this.pipesManager.reset();
 		this.timeSinceLastPipe = 0;
 
-		const startWithShield = localStorage.getItem('shop_shield') === 'true';
-		const startWithPepper = localStorage.getItem('shop_pepper') === 'true';
+		const shieldUnlocked = localStorage.getItem('shop_shield') === 'true';
+		const pepperUnlocked = localStorage.getItem('shop_pepper') === 'true';
 
-		if (startWithShield) {
-			this.collectShield();
-		}
-
-		if (startWithPepper) {
-			this.collectPepper();
-		}
+		this.pipesManager.shieldUnlocked = shieldUnlocked;
+		this.pipesManager.pepperUnlocked = pepperUnlocked;
 
 		this.app.ticker.add(this.gameLoop, this);
 	}
