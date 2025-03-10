@@ -543,9 +543,10 @@ export default class Game {
 		this.hasShieldActive = true;
 		this.isInvulnerable = true;
 
-		this.gameOverContainer.visible = false;
+		this.uiManager.gameOverContainer.visible = false;
 		this.uiManager.gameOverUIContainer.visible = false;
 
+		this.app.ticker.remove(this.gameLoop, this);
 		this.app.ticker.add(this.gameLoop, this);
 	}
 
