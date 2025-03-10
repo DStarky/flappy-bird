@@ -104,6 +104,49 @@ export default class UIManager {
 		this.menuCoinText.x = 28;
 		this.menuCoinText.y = -4;
 		this.menuCoinContainer.addChild(this.menuCoinText);
+
+		this.countdownContainer = new PIXI.Container();
+		this.countdownContainer.visible = false;
+		this.gameHUD.addChild(this.countdownContainer);
+
+		const countdownOverlay = new PIXI.Graphics();
+		countdownOverlay.beginFill(0x000000, 0.5);
+		countdownOverlay.drawRect(0, 0, this.width, this.height);
+		countdownOverlay.endFill();
+		this.countdownContainer.addChild(countdownOverlay);
+
+		this.countdownText = new PIXI.Text('3', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 120,
+			fill: 0xffffff,
+			stroke: 0x000000,
+			strokeThickness: 8,
+			align: 'center',
+		});
+		this.countdownText.anchor.set(0.5);
+		this.countdownText.x = this.width / 2;
+		this.countdownText.y = this.height / 2;
+		this.countdownContainer.addChild(this.countdownText);
+	}
+
+	startCountdown(callback) {
+		this.countdownContainer.visible = true;
+		let count = 3;
+		this.countdownText.text = count.toString();
+
+		const countInterval = setInterval(() => {
+			count--;
+
+			if (count > 0) {
+				this.countdownText.text = count.toString();
+				this.game.soundManager.play('point');
+			} else {
+				clearInterval(countInterval);
+				this.countdownContainer.visible = false;
+				this.game.soundManager.play('swoosh');
+				if (callback) callback();
+			}
+		}, 600);
 	}
 
 	updateVisibility(state) {

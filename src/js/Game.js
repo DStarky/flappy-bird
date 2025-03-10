@@ -517,17 +517,9 @@ export default class Game {
 		if (this.gameState.current !== 'GAMEOVER') return;
 
 		this.continuedWithAd = true;
-		this.gameState.transitionTo('PLAY');
-		this.uiManager.updateVisibility(this.gameState.current);
-		this.soundManager.play('swoosh');
-		this.soundManager.playMusic();
 
-		if (this.ysdk) {
-			this.ysdk.startGamePlay();
-		}
-
-		this.pipesManager.speed = this.pipeSpeed;
-		this.groundSpeed = this.difficultyManager.getDifficultySettings().groundSpeed;
+		this.uiManager.gameOverContainer.visible = false;
+		this.uiManager.gameOverUIContainer.visible = false;
 
 		const safeY = this.height / 2;
 		this.bird.sprite.y = safeY;
@@ -538,11 +530,22 @@ export default class Game {
 		this.hasShieldActive = true;
 		this.isInvulnerable = true;
 
-		this.uiManager.gameOverContainer.visible = false;
-		this.uiManager.gameOverUIContainer.visible = false;
+		this.uiManager.gameHUD.visible = true;
+		this.uiManager.startCountdown(() => {
+			this.gameState.transitionTo('PLAY');
+			this.uiManager.updateVisibility(this.gameState.current);
+			this.soundManager.playMusic();
 
-		this.app.ticker.remove(this.gameLoop, this);
-		this.app.ticker.add(this.gameLoop, this);
+			if (this.ysdk) {
+				this.ysdk.startGamePlay();
+			}
+
+			this.pipesManager.speed = this.pipeSpeed;
+			this.groundSpeed = this.difficultyManager.getDifficultySettings().groundSpeed;
+
+			this.app.ticker.remove(this.gameLoop, this);
+			this.app.ticker.add(this.gameLoop, this);
+		});
 	}
 
 	showAdToContinue() {
