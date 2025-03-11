@@ -112,6 +112,7 @@ export default class ShieldEffect {
 
 						if (this.bird.game) {
 							this.bird.game.isInvulnerable = false;
+							this.bird.game.hasShieldActive = false;
 						}
 					}
 				}
@@ -139,9 +140,7 @@ export default class ShieldEffect {
 		}, 50);
 
 		this.deactivate();
-
 		this.makeInvulnerable();
-
 		this.bird.game?.soundManager.play('hit');
 
 		return true;
