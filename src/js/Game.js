@@ -6,6 +6,7 @@ import SoundManager from './SoundManager';
 import CollisionManager from './CollisionManager';
 import GameState from './GameState';
 import DifficultyManager from './DifficultyManager';
+import { preventDefaultBehaviors } from './preventDefaultBehaviors';
 
 import bgDay from '../assets/background-day.png';
 import base from '../assets/base.png';
@@ -37,10 +38,13 @@ export default class Game {
 		this.isInvulnerable = false;
 		this.isPepperActive = false;
 		this.continuedWithAd = false;
+		this.pausedForAd = false;
 
 		this.timeSinceLastPipe = 0;
 		this.saveDataTimer = 0;
 		this.saveDataInterval = 10 * 60;
+
+		preventDefaultBehaviors();
 
 		this.app = new PIXI.Application({
 			width: this.width,
@@ -237,10 +241,13 @@ export default class Game {
 
 	pauseGame() {
 		if (this.gameState.current !== 'PLAY') return;
+
 		this.gameState.transitionTo('PAUSE');
 		this.uiManager.updateVisibility(this.gameState.current);
 		this.soundManager.play('swoosh');
 		this.soundManager.pauseMusic();
+
+		this.app.ticker.stop();
 
 		if (this.ysdk) {
 			this.ysdk.stopGamePlay();
@@ -249,10 +256,13 @@ export default class Game {
 
 	resumeGame() {
 		if (this.gameState.current !== 'PAUSE') return;
+
 		this.gameState.transitionTo('PLAY');
 		this.uiManager.updateVisibility(this.gameState.current);
 		this.soundManager.play('swoosh');
 		this.soundManager.playMusic();
+
+		this.app.ticker.start();
 
 		if (this.ysdk) {
 			this.ysdk.startGamePlay();
@@ -413,7 +423,7 @@ export default class Game {
 		if (this.ysdk && !this.ysdk.isLocalDevelopment) {
 			setTimeout(() => {
 				this.ysdk.showInterstitialAd();
-			}, 1000);
+			}, 1500);
 		}
 	}
 
@@ -542,6 +552,10 @@ export default class Game {
 
 			this.pipesManager.speed = this.pipeSpeed;
 			this.groundSpeed = this.difficultyManager.getDifficultySettings().groundSpeed;
+
+			if (!this.app.ticker.started) {
+				this.app.ticker.start();
+			}
 
 			this.app.ticker.remove(this.gameLoop, this);
 			this.app.ticker.add(this.gameLoop, this);

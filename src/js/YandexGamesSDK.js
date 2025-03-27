@@ -10,8 +10,9 @@ export default class YandexGamesSDK {
 		this.hasShownInterstitialAd = false;
 		this.rewardedAdInProgress = false;
 		this.lastAdShownTime = 0;
-		this.adsMinInterval = 60000;
+		this.adsMinInterval = 180000;
 		this.isLocalDevelopment = false;
+		this.gameStateBeforeAd = null;
 	}
 
 	async init() {
@@ -203,29 +204,48 @@ export default class YandexGamesSDK {
 		try {
 			this.hasShownInterstitialAd = true;
 
-			const wasMusicPlaying = this.game.soundManager.isMusicPlaying;
-			this.game.soundManager.pauseMusic();
+			this.gameStateBeforeAd = this.game.gameState.current;
+
+			if (this.gameStateBeforeAd === 'PLAY') {
+				this.game.pauseGame();
+			} else {
+				this.game.soundManager.pauseMusic();
+			}
+
+			await this._showAdWarning();
 
 			await this.sdk.adv.showFullscreenAdv({
 				callbacks: {
 					onClose: wasShown => {
 						this.lastAdShownTime = Date.now();
 
-						if (wasMusicPlaying && !this.game.soundManager.isMusicMuted) {
+						if (this.gameStateBeforeAd === 'PLAY') {
+							this.game.resumeGame();
+						} else if (!this.game.soundManager.isMusicMuted) {
 							this.game.soundManager.playMusic();
 						}
+
+						this.gameStateBeforeAd = null;
 					},
 					onError: error => {
-						if (wasMusicPlaying && !this.game.soundManager.isMusicMuted) {
+						if (this.gameStateBeforeAd === 'PLAY') {
+							this.game.resumeGame();
+						} else if (!this.game.soundManager.isMusicMuted) {
 							this.game.soundManager.playMusic();
 						}
+
+						this.gameStateBeforeAd = null;
 					},
 				},
 			});
 		} catch (err) {
-			if (wasMusicPlaying && !this.game.soundManager.isMusicMuted) {
+			if (this.gameStateBeforeAd === 'PLAY') {
+				this.game.resumeGame();
+			} else if (!this.game.soundManager.isMusicMuted) {
 				this.game.soundManager.playMusic();
 			}
+
+			this.gameStateBeforeAd = null;
 		}
 	}
 
@@ -241,8 +261,15 @@ export default class YandexGamesSDK {
 		try {
 			this.rewardedAdInProgress = true;
 
-			const wasMusicPlaying = this.game.soundManager.isMusicPlaying;
-			this.game.soundManager.pauseMusic();
+			this.gameStateBeforeAd = this.game.gameState.current;
+
+			if (this.gameStateBeforeAd === 'PLAY') {
+				this.game.pauseGame();
+			} else {
+				this.game.soundManager.pauseMusic();
+			}
+
+			await this._showAdWarning('Награда за просмотр рекламы');
 
 			await this.sdk.adv.showRewardedVideo({
 				callbacks: {
@@ -255,18 +282,26 @@ export default class YandexGamesSDK {
 					onClose: () => {
 						this.rewardedAdInProgress = false;
 
-						if (wasMusicPlaying && !this.game.soundManager.isMusicMuted) {
+						if (this.gameStateBeforeAd === 'PLAY') {
+							this.game.resumeGame();
+						} else if (!this.game.soundManager.isMusicMuted) {
 							this.game.soundManager.playMusic();
 						}
+
+						this.gameStateBeforeAd = null;
 
 						if (callbacks.onClose) callbacks.onClose();
 					},
 					onError: error => {
 						this.rewardedAdInProgress = false;
 
-						if (wasMusicPlaying && !this.game.soundManager.isMusicMuted) {
+						if (this.gameStateBeforeAd === 'PLAY') {
+							this.game.resumeGame();
+						} else if (!this.game.soundManager.isMusicMuted) {
 							this.game.soundManager.playMusic();
 						}
+
+						this.gameStateBeforeAd = null;
 
 						if (callbacks.onError) callbacks.onError(error);
 					},
@@ -277,12 +312,61 @@ export default class YandexGamesSDK {
 		} catch (err) {
 			this.rewardedAdInProgress = false;
 
-			if (wasMusicPlaying && !this.game.soundManager.isMusicMuted) {
+			if (this.gameStateBeforeAd === 'PLAY') {
+				this.game.resumeGame();
+			} else if (!this.game.soundManager.isMusicMuted) {
 				this.game.soundManager.playMusic();
 			}
 
+			this.gameStateBeforeAd = null;
+
 			return false;
 		}
+	}
+
+	_showAdWarning(title = 'Реклама') {
+		return new Promise(resolve => {
+			const overlay = document.createElement('div');
+			overlay.style.cssText = `
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0, 0, 0, 0.7);
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				z-index: 10000;
+				color: white;
+				font-family: Arial, sans-serif;
+			`;
+
+			const titleElement = document.createElement('div');
+			titleElement.textContent = title;
+			titleElement.style.cssText = `
+				font-size: 24px;
+				font-weight: bold;
+				margin-bottom: 20px;
+			`;
+
+			const message = document.createElement('div');
+			message.textContent = 'Сейчас начнется показ рекламы';
+			message.style.cssText = `
+				font-size: 18px;
+				margin-bottom: 30px;
+			`;
+
+			overlay.appendChild(titleElement);
+			overlay.appendChild(message);
+			document.body.appendChild(overlay);
+
+			setTimeout(() => {
+				document.body.removeChild(overlay);
+				resolve();
+			}, 2000);
+		});
 	}
 
 	async showBanner(show = true) {
