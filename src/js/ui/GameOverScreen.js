@@ -1,6 +1,4 @@
 import * as PIXI from 'pixi.js';
-
-import gameOverImage from '../../assets/gameover.png';
 import coinImg from '../../assets/MonedaD.png';
 import shieldImg from '../../assets/shield.png';
 
@@ -21,11 +19,23 @@ export default class GameOverScreen {
 		this.gameOverImageContainer = new PIXI.Container();
 		this.container.addChild(this.gameOverImageContainer);
 
-		const gameOverSprite = new PIXI.Sprite(PIXI.Texture.from(gameOverImage));
-		gameOverSprite.anchor.set(0.5);
-		gameOverSprite.x = this.width / 2;
-		gameOverSprite.y = 0;
-		this.gameOverImageContainer.addChild(gameOverSprite);
+		const gameOverText = new PIXI.Text('ИГРА ОКОНЧЕНА', {
+			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
+			fontSize: 48,
+			fill: 0xff0000,
+			align: 'center',
+			stroke: 0x000000,
+			strokeThickness: 6,
+			dropShadow: true,
+			dropShadowColor: 0x000000,
+			dropShadowDistance: 3,
+			dropShadowBlur: 5,
+			dropShadowAlpha: 0.5,
+		});
+		gameOverText.anchor.set(0.5);
+		gameOverText.x = this.width / 2;
+		gameOverText.y = 0;
+		this.gameOverImageContainer.addChild(gameOverText);
 
 		this.gameOverImageContainer.y = this.height + 100;
 
@@ -137,7 +147,17 @@ export default class GameOverScreen {
 		const restartText = new PIXI.Text('ЗАНОВО', {
 			fontFamily: ['HarreeghPoppedCyrillic', 'Arial'],
 			fontSize: 30,
-			fill: 0xffffff,
+/*************  ✨ Codeium Command ⭐  *************/
+	/**
+	 * Prepares the game over screen with the given score, best score, and coins collected.
+	 * 
+	 * @param {number} score - The final score of the player.
+	 * @param {number} bestScore - The best score achieved by the player.
+	 * @param {number} coinsCollected - The number of coins collected in the game session.
+	 * @param {boolean} canContinue - Determines if the player can continue the game after watching an ad.
+	 */
+
+/******  9ee55531-f144-4463-b007-5f92ff8b0012  *******/			fill: 0xffffff,
 		});
 		restartText.anchor.set(0.5);
 		restartText.x = 100;
